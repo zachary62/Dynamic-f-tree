@@ -1,10 +1,12 @@
 #include "dimension.h"
+#include "feature.h"
+#include "attribute.h"
 #include <vector>
 
 using namespace std;
 
-Dimension::Dimension(std::vector<int> f, int id)
+Dimension::Dimension(vector<Attribute*> as, int id)
 {
-    _value = f;
+    _as = as;
     _id = id;
 }

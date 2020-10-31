@@ -1,6 +1,19 @@
-#include "attribute.h"
+#include "matrix.h"
 #include <iostream>
-void MyFunc6() {
-    std::cout << "Ohai from another .cpp file!";
-    std::cin.get();
+#include <iomanip>
+#include <vector>
+
+using namespace std;
+
+Matrix::Matrix(std::vector<std::vector<double>> m) {
+    _m = m;
+}
+
+void Matrix::printSelf(){
+    for(vector<double> r: _m){
+        for(double i : r){
+            cout << fixed << setprecision(2) << i <<" ";
+        }
+        cout << "\n";
+    }
 }

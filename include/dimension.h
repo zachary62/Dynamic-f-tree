@@ -1,9 +1,13 @@
+#pragma once
+#include "feature.h"
+#include "attribute.h"
 #include <vector>
 
 class Dimension
 {
 public:
-    Dimension(std::vector<int> f, int id);
+    Dimension(std::vector<Attribute*> as, int id);
     int _id;
-    std::vector<int> _value;
+    // attributes in this dimension
+    std::vector<Attribute*> _as;
 };
