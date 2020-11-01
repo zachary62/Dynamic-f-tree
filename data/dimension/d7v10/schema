@@ -1,0 +1,25 @@
+# first is number of dimensions
+# second is number of attributes
+# third is number of features
+
+7 7 35
+
+# for each attribute, list its number of values, and feature ids
+
+10 1 2 3 4 5
+10 6 7 8 9 10
+10 11 12 13 14 15
+10 16 17 18 19 20
+10 21 22 23 24 25
+10 26 27 28 29 30
+10 31 32 33 34 35
+
+# for each dimension, list its attribute ids from highest level to lowest level
+
+1
+2
+3
+4
+5
+6
+7
