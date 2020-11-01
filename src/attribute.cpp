@@ -12,21 +12,30 @@ Attribute::Attribute(int num_values, int id,  std::vector<Feature*> fs)
     _fs = fs;
 }
 
-void Attribute::setEnd(std::unordered_set<int> end)
+void Attribute::setEnd(std::vector<int> end)
 {
-    _end = end;
+    _endVec = end;
+    _endSet = unordered_set<int>(end.begin(),end.end());
     printEnd();
     
 }
 
 void Attribute::printEnd(){
     cout<< "attribute " << _id << " set contains: ";
-    for(auto it = _end.begin(); it != _end.end(); it++)
+    for(int i : _endVec)
     {
-        cout<< *it <<" ";
+        cout<< i <<" ";
     }
 
     cout<<"\n";
+}
+
+vector<double> Attribute::getFeatures(int index){
+    vector<double> result;
+    for(Feature* f: _fs){
+        result.push_back(f->_value[index]);
+    }
+    return result;
 }
 
 
@@ -41,9 +50,7 @@ IterReply AttributeRowIter::next()
     IterReply r;
     r.carry = false;
 
-    
-
-    if(_a._end.find(cur) != _a._end.end()) {
+    if(_a._endSet.find(cur) != _a._endSet.end()) {
         r.carry = true;
     }
 
@@ -52,6 +59,8 @@ IterReply AttributeRowIter::next()
     if(cur > _a._num_values){
         cur = 1;
     }
+
     r.value = cur;
     return r;
+
 }
