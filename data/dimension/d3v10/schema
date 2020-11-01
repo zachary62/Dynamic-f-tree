@@ -2,13 +2,13 @@
 # second is number of attributes
 # third is number of features
 
-3 3 3
+3 3 15
 
 # for each attribute, list its number of values, and feature ids
 
-10 1
-10 1
-10 1
+10 1 2 3 4 5
+10 6 7 8 9 10
+10 11 12 13 14 15
 
 # for each dimension, list its attribute ids from highest level to lowest level
 

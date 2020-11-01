@@ -47,6 +47,15 @@ void test_matrix_op(string directory){
     for(int i = 0; i < t._num_f; i++){
         vector<double> row;
         row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
+        row.push_back(1.01);
         right_to_mul.push_back(row);
     }
 
@@ -69,12 +78,13 @@ void test_matrix_op(string directory){
     int total = c_first.leftCount * c_first.value;
 
     vector<vector<double> > left_to_mul;
-    vector<double> row;
-    for(int i = 0; i < total; i++){
-        row.push_back(1.01);
+    for(int j = 0; j < 10; j++){
+        vector<double> row;
+        for(int i = 0; i < total; i++){
+            row.push_back(1.01);
+        }
+        left_to_mul.push_back(row);
     }
-    left_to_mul.push_back(row);
-
     Matrix mx3(left_to_mul);
 
     start = clock();

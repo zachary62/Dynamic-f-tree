@@ -617,8 +617,6 @@ Matrix* FtreeToFeatureMatrix::toMatrix()
 
 Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
 {
-   
-
     vector<vector<double>> right_vec = right->_m;
     vector<vector<double>> result;
     
@@ -655,30 +653,18 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
 
     result.push_back(first_row);
 
-
-    clock_t start;
-    double duration1 = 0;
-    double duration2 = 0;
-    double duration3 = 0;
+    
+    vector<double> result_row = result[0];
     
     // for rows after
     while(true){
-        start = clock();
+
         unordered_map<int,int> map = next();
-        
 
         //note check hasNext here, not in the while!
         if(!hasNext()){
             break;
         }
-
-        duration1 += (clock() - start);
-
-        start = clock();
-        vector<double> result_row = result[result.size() - 1];
-
-        vector<double> before(right_vec[0].size(),0);
-        vector<double> after(right_vec[0].size(),0);
 
         // first is position of change. second is the value changed to.
         unordered_map<int, int>::iterator it;
@@ -689,35 +675,23 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
             for(unsigned int i = 0; i < features.size(); i++){
 
                 for(unsigned int j = 0; j < right_vec[0].size(); j++){
-                    before[j] += r[i + prefix_sum_f[it->first]] * right_vec[i + prefix_sum_f[it->first]][j];
+                   result_row[j] -= r[i + prefix_sum_f[it->first]] * right_vec[i + prefix_sum_f[it->first]][j];
                 }
 
                 r[i + prefix_sum_f[it->first]] = features[i];
 
                 for(unsigned int j = 0; j < right_vec[0].size(); j++){
-                    after[j] += r[i + prefix_sum_f[it->first]] * right_vec[i + prefix_sum_f[it->first]][j];
+                    result_row[j] += r[i + prefix_sum_f[it->first]] * right_vec[i + prefix_sum_f[it->first]][j];
                 }
             }
         }
-        duration2 += (clock() - start) ;
-
-        start = clock();
-        // propogate change
-        for(unsigned int j = 0; j < right_vec[0].size(); j++){
-            result_row[j] -= before[j];
-            result_row[j] += after[j];
-        }
-
         result.push_back(result_row);
-        duration3 += (clock() - start) ;
+
+
     }
 
-    cout << "part a takes: " << duration1 << "\n";    
-    cout << "part b takes: " << duration2 << "\n";    
-    cout << "part c takes: " << duration3 << "\n";   
-    cout << "Total time: " << (duration3 +  duration2 + duration3)/ (double)CLOCKS_PER_SEC << "\n"; 
-
     Matrix* mx = new Matrix(result);
+
     return mx;
 
 }
