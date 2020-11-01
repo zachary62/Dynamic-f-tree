@@ -115,3 +115,11 @@ public:
     Matrix* Cofactor();
     const FtreeState& _ts;  
 };
+
+class FtreeLeftMultiplication
+{
+public:
+    FtreeLeftMultiplication(const FtreeState& ts):_ts(ts){};
+    Matrix* LeftMultiply(Matrix* left);
+    const FtreeState& _ts;  
+};

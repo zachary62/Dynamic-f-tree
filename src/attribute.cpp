@@ -16,7 +16,6 @@ void Attribute::setEnd(std::vector<int> end)
 {
     _endVec = end;
     _endSet = unordered_set<int>(end.begin(),end.end());
-    printEnd();
     
 }
 

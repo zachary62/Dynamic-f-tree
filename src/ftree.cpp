@@ -10,11 +10,12 @@
 #include <unordered_set>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 static const char COMMENT_CHAR = '#';
 static const char PARAMETER_SEPARATOR_CHAR = ' ';
 
-static const bool VERBOSE = true;
+static const bool VERBOSE = false;
 
 using namespace std;
 
@@ -415,18 +416,18 @@ void Ftree::initalize(FtreeState init){
                 CountCof ccf{};
                 ccf.id1 = a_i->_id;
                 ccf.id2 = a_j->_id;
-                ccf.leftCount = prefix_product[dim_index[dim_i]];
+                // ccf.leftCount = prefix_product[dim_index[dim_i]];
                 ccf.middleCount = prefix_product[dim_index[dim_j]] / prefix_product[dim_index[dim_i]+1];
                 ccf.cartesian = true;
-                _state.ccofs[i][j] = ccf;
+                _state.ccofs[a_i->_id][a_j->_id] = ccf;
             }else{
                 CountCof ccf{};
                 ccf.id1 = a_i->_id;
                 ccf.id2 = a_j->_id;
-                ccf.leftCount = prefix_product[dim_index[dim_i]];
+                // ccf.leftCount = prefix_product[dim_index[dim_i]];
                 ccf.middleCount = 1;
                 ccf.cartesian = false;
-                _state.ccofs[i][j] = ccf;
+                _state.ccofs[a_i->_id][a_j->_id] = ccf;
             }
 
         }
@@ -480,14 +481,14 @@ void Ftree::initalize(FtreeState init){
 
     cout << "CountCof:\n";
     for(auto const &ent1 : _state.ccofs) {
-        // auto const &outer_key = ent1.first;
+        auto const &outer_key = ent1.first;
         auto const &inner_map = ent1.second;
         for(auto const &ent2 : inner_map) {
-            // auto const &inner_key   = ent2.first;
+            auto const &inner_key   = ent2.first;
             auto const &inner_value = ent2.second;
 
-            cout<< inner_value.id1 << " " << inner_value.id2
-                << " leftCount " << inner_value.leftCount
+            cout<< outer_key << " " << inner_key 
+                // << " leftCount " << inner_value.leftCount
                 << " middleCount " << inner_value.middleCount;
             if(inner_value.cartesian){
                 cout<<" is cartesian";
@@ -544,7 +545,6 @@ RowIter::~RowIter()
         delete _iters[i];
     }
 }
-
 
 Matrix* FtreeToAttrMatrix::toMatrix()
 {   
@@ -617,6 +617,8 @@ Matrix* FtreeToFeatureMatrix::toMatrix()
 
 Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
 {
+   
+
     vector<vector<double>> right_vec = right->_m;
     vector<vector<double>> result;
     
@@ -654,16 +656,25 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
     result.push_back(first_row);
 
 
-
+    clock_t start;
+    double duration1 = 0;
+    double duration2 = 0;
+    double duration3 = 0;
+    
     // for rows after
     while(true){
+        start = clock();
         unordered_map<int,int> map = next();
         
+
         //note check hasNext here, not in the while!
         if(!hasNext()){
             break;
         }
 
+        duration1 += (clock() - start);
+
+        start = clock();
         vector<double> result_row = result[result.size() - 1];
 
         vector<double> before(right_vec[0].size(),0);
@@ -688,7 +699,9 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
                 }
             }
         }
+        duration2 += (clock() - start) ;
 
+        start = clock();
         // propogate change
         for(unsigned int j = 0; j < right_vec[0].size(); j++){
             result_row[j] -= before[j];
@@ -696,9 +709,255 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
         }
 
         result.push_back(result_row);
+        duration3 += (clock() - start) ;
     }
+
+    cout << "part a takes: " << duration1 << "\n";    
+    cout << "part b takes: " << duration2 << "\n";    
+    cout << "part c takes: " << duration3 << "\n";   
+    cout << "Total time: " << (duration3 +  duration2 + duration3)/ (double)CLOCKS_PER_SEC << "\n"; 
 
     Matrix* mx = new Matrix(result);
     return mx;
 
+}
+
+Matrix* FtreeCofactor::Cofactor(){
+
+    int num_feature = 0;
+    unordered_map<int,int> fid_to_index;
+    for(Attribute * a: _ts._attr_order){
+        for(Feature* f: a->_fs){
+            fid_to_index[f->_id] = num_feature;
+            num_feature ++;
+        }
+    }
+
+    vector<vector<double>> result;
+    for(int i = 0; i < num_feature; i++){
+        vector<double> result_row(num_feature,0);
+        result.push_back(result_row);
+    }
+    
+    Count c_first = _ts.cs.at(_ts._attr_order[0]->_id);
+    double total = c_first.leftCount * c_first.value;
+
+    for(unsigned int i = 0; i < _ts._attr_order.size(); i++){
+        for(unsigned int j = i; j < _ts._attr_order.size(); j++){
+            // same attribute
+            if(i == j){
+                Attribute* a = _ts._attr_order[i];
+                for(unsigned int m = 0; m < a->_fs.size(); m++){
+                    for(unsigned int n = m; n < a->_fs.size(); n++){
+                        Feature* f1 = a->_fs[m];
+                        Feature* f2 = a->_fs[n];
+                        
+                        CountAtt ca = _ts.cas.at(a->_id);
+                        
+                        double cell_result = 0;
+
+                        if(ca.allOne){
+                            for(unsigned int p = 0; p < f1->_value.size(); p++){
+                                cell_result += f1->_value[p] * f2->_value[p];
+                            }
+                            
+                        }else{
+                            for(unsigned int p = 0; p < f1->_value.size(); p++){
+                                int prev = (p==0? 0: ca.prefix_sum[p-1]);
+                                cell_result += f1->_value[p] * f2->_value[p] * (ca.prefix_sum[p] - prev);
+                            }
+                        }
+
+                        cell_result *= ca.leftCount;
+                        Count c = _ts.cs.at(a->_id);
+                        double rightCount = total/ (c.value *c.leftCount);
+                        cell_result *= rightCount;
+
+                        result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
+                        result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                    }
+                }
+
+            }
+            else{
+                Attribute* a = _ts._attr_order[i];
+                Attribute* b = _ts._attr_order[j];
+
+                CountAtt ca1 = _ts.cas.at(a->_id);
+                CountAtt ca2 = _ts.cas.at(b->_id);
+                CountCof ccf = _ts.ccofs.at(b->_id).at(a->_id);
+
+                for(Feature* f1: a->_fs){
+                    for(Feature* f2: b->_fs){
+                        if(ccf.cartesian){
+                            
+
+                            double cell_result = 0;
+
+                            double left = 0;
+
+                            if(ca2.allOne){
+                                for(unsigned int p = 0; p < f2->_value.size(); p++){
+                                    left += f2->_value[p];
+                                }
+                                
+                            }else{
+                                for(unsigned int p = 0; p < f2->_value.size(); p++){
+                                    int prev = (p==0? 0: ca2.prefix_sum[p-1]);
+                                    left += f2->_value[p] * (ca2.prefix_sum[p] - prev);
+                                }
+                            }
+
+                            double right = 0;
+
+                            if(ca1.allOne){
+                                for(unsigned int p = 0; p < f1->_value.size(); p++){
+                                    right += f1->_value[p];
+                                }
+                                
+                            }else{
+                                for(unsigned int p = 0; p < f1->_value.size(); p++){
+                                    int prev = (p==0? 0: ca1.prefix_sum[p-1]);
+                                    right += f1->_value[p] * (ca1.prefix_sum[p] - prev);
+                                }
+                            }
+
+                            cell_result = left * right;
+
+                            cell_result *= ca2.leftCount;
+                            cell_result *= ccf.middleCount;
+                            Count c = _ts.cs.at(a->_id);
+                            double rightCount = total/ (c.value *c.leftCount);
+                            cell_result *= rightCount;
+
+                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
+                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                        
+                        }
+                        else{
+                            double cell_result = 0;
+
+                            // ca2 is the last level in the hierarchy
+                            if(ca2.allOne){
+                                int rightp = 0;
+                                for(int leftp = 0; leftp < signed(f2->_value.size()); leftp++){
+                                    if(leftp + 1 > ca1.prefix_sum[rightp]){
+                                        rightp++;
+                                    }
+                                    cell_result += f1->_value[rightp] * f2->_value[leftp];
+                                  
+                                }
+
+                            }else{
+                                int rightp = 0;
+                                for(unsigned int leftp = 0; leftp < f2->_value.size(); leftp++){
+                                    if(ca2.prefix_sum[leftp] > ca1.prefix_sum[rightp]){
+                                        rightp++;
+                                    }
+
+                                    int prev = (leftp==0? 0: ca2.prefix_sum[leftp-1]);
+                                    cell_result += f1->_value[rightp] * f2->_value[leftp] * (ca2.prefix_sum[leftp] - prev);
+                                }
+
+                            }
+
+                            cell_result *= ca2.leftCount;
+                            Count c = _ts.cs.at(a->_id);
+                            double rightCount = total/ (c.value *c.leftCount);
+                            cell_result *= rightCount;
+
+                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
+                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+
+                        }
+
+                    }
+                }
+            }
+
+        }
+    }
+    
+    Matrix* mx = new Matrix(result);
+    return mx;
+
+}
+
+Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
+    vector<vector<double>> left_vec = left->_m;
+    int a = left_vec.size();
+    int b = left_vec[0].size();
+
+    Count c_first = _ts.cs.at(_ts._attr_order[0]->_id);
+    double total = c_first.leftCount * c_first.value;
+
+    if(total != b){
+        cout<<"invalid left multiplication!\n";
+        exit(1);
+    }
+
+    int num_feature = 0;
+    
+    unordered_map<int,int> fid_to_index;
+    for(Attribute * a: _ts._attr_order){
+        for(Feature* f: a->_fs){
+            fid_to_index[f->_id] = num_feature;
+            num_feature ++;
+        }
+    }
+
+    vector<vector<double>> result;
+    for(int i = 0; i < a; i++){
+        vector<double> result_row(num_feature,0);
+        result.push_back(result_row);
+    }
+
+    //build the prefix_sum
+    for(int i = 0; i < a; i++){
+        for(int j = 1; j < b; j++){
+            left_vec[i][j] = left_vec[i][j-1] + left_vec[i][j];
+        }
+    }
+
+    for(unsigned int i = 0; i < _ts._attr_order.size(); i++){
+        Attribute* att = _ts._attr_order[i];
+        CountAtt ca = _ts.cas.at(att->_id);
+        Count c = _ts.cs.at(att->_id);
+        double total_i = c.leftCount * c.value;
+
+        for(unsigned int m = 0; m < att->_fs.size(); m++){
+            Feature * f = att->_fs[m];
+            for(int j = 0; j < a; j++){
+                double cell_result = 0;
+                int start = 0;
+                for(int k = 0; k < (int) total/total_i; k++){
+                    for(unsigned int p = 0; p < f->_value.size(); p++){
+                        int length = 0;
+                        if(ca.allOne){
+                            length = ca.leftCount;
+                        }else{
+                            int prev = (p==0? 0: ca.prefix_sum[p-1]);
+                            length = (ca.prefix_sum[p] - prev) * ca.leftCount;
+                        }
+
+                        double rangeSum = 0;
+                        if(start == 0){
+                            rangeSum = left_vec[j][length - 1];
+                        }else{
+                            rangeSum = left_vec[j][start + length - 1] - left_vec[j][start - 1];
+                        }
+
+                        cell_result += rangeSum * f->_value[p];
+
+                        start += length;
+                    }
+                }
+                result[j][fid_to_index.at(f->_id)] = cell_result;
+            }
+        }
+    }
+
+    
+    Matrix* mx = new Matrix(result);
+    return mx;
 }

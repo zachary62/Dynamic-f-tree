@@ -22,7 +22,6 @@ struct CountCof
 {
   int id1;
   int id2;
-  int leftCount;
   int middleCount;
   bool cartesian;
 };
@@ -31,6 +30,7 @@ struct FtreeState
 {
   std::vector<Attribute*> _attr_order;
 
+  // attribute id to state
   std::unordered_map<int, Count> cs;
   std::unordered_map<int, CountAtt> cas;
   std::unordered_map<int,std::unordered_map<int,CountCof>> ccofs;
