@@ -829,7 +829,7 @@ Matrix* FtreeCofactor::Cofactor(){
                             }else{
                                 int rightp = 0;
                                 for(unsigned int leftp = 0; leftp < f2->_value->size(); leftp++){
-                                    if(ca2.prefix_sum[leftp] > ca1.prefix_sum[rightp]){
+                                    if(ca2.prefix_sum->at(leftp) > ca1.prefix_sum->at(rightp)){
                                         rightp++;
                                     }
 
