@@ -81,12 +81,12 @@ void Ftree::buildFromFile(string dir){
 
     for(int i = 1; i <= _num_f; i++){
 
-        vector<double> vec = buildFeatureFromFile(dir + "f" + to_string(i));
+        vector<double>* vec = buildFeatureFromFile(dir + "f" + to_string(i));
         Feature* f = new Feature(vec,i);
         _f.push_back(f);
 
         if(VERBOSE){
-            cout << "Feature "<< i  << " has " <<  vec.size() << " values. \n";   
+            cout << "Feature "<< i  << " has " <<  vec->size() << " values. \n";   
         }
 
     }
@@ -117,7 +117,7 @@ void Ftree::buildFromFile(string dir){
         while(getline(ssLine, fidString, PARAMETER_SEPARATOR_CHAR)){
             f_id = stoi(fidString);
             Feature* f = _f[f_id-1];
-            if(f->_value.size() != unsigned(num_values)){
+            if(f->_value->size() != unsigned(num_values)){
                 cout<< "Feature " << f_id << " doesn't have equal number of values. \n";
 		        exit(1);
             }
@@ -135,6 +135,7 @@ void Ftree::buildFromFile(string dir){
 
     }
 
+    // for each dimension, read relation file
     for(int i = 1; i <= _num_d; i++){
 
         while (getline(input, line))
@@ -151,6 +152,7 @@ void Ftree::buildFromFile(string dir){
         int a_id;
         vector<Attribute*> a_vec;
 
+        // read all the attributes in this dimension
         while(getline(ssLine, aidString, PARAMETER_SEPARATOR_CHAR)){
             a_id = stoi(aidString);
             Attribute* a = _a[a_id-1];
@@ -164,21 +166,22 @@ void Ftree::buildFromFile(string dir){
 
         Attribute* first = a_vec[0];
 
-        vector<int> first_e;
-        first_e.push_back(first->_num_values);
+        // first dimension has end {1}
+        vector<int>* first_e = new vector<int>();
+        first_e->push_back(first->_num_values);
         first->setEnd(first_e);
 
         for(unsigned int i = 1; i < a_vec.size(); i++){
             Attribute* a = a_vec[i];
-           vector<int> e = buildRelationFromFile(dir + "r" + to_string(a->_id));
+            vector<int>* e = buildRelationFromFile(dir + "r" + to_string(a->_id));
             
-            if(e[e.size()-1] !=  a->_num_values) {
+            if(e->at(e->size()-1) !=  a->_num_values) {
                 cout<< "Relation " << a->_id << " doesn't contain the last value of the attribute.\n";
 		        exit(1);
             } 
 
             Attribute* prev_a = a_vec[i-1];
-            if(e.size() != unsigned(prev_a->_num_values)){
+            if(e->size() != unsigned(prev_a->_num_values)){
                 cout<< "Relation " << a->_id << " doesn't has the same number of values as the previous attribute.\n";
 		        exit(1);
             }
@@ -208,7 +211,7 @@ void Ftree::buildFromFile(string dir){
 
 }
 
-vector<double> Ftree::buildFeatureFromFile(string dir){
+vector<double>* Ftree::buildFeatureFromFile(string dir){
     ifstream input(dir);
     string line;
     stringstream ssLine;
@@ -219,7 +222,7 @@ vector<double> Ftree::buildFeatureFromFile(string dir){
 		exit(1);
 	}
 
-    vector<double> f;
+    vector<double>* f = new vector<double>();
     double value;
 
     while (getline(input, line))
@@ -227,14 +230,14 @@ vector<double> Ftree::buildFeatureFromFile(string dir){
         ssLine << line;
         ssLine >> value;
 
-        f.push_back(value);
+        f->push_back(value);
         ssLine.clear();
     }
     return f;
     
 }
 
-vector<int> Ftree::buildRelationFromFile(string dir){
+vector<int>* Ftree::buildRelationFromFile(string dir){
 
     ifstream input(dir);
     string line;
@@ -246,7 +249,7 @@ vector<int> Ftree::buildRelationFromFile(string dir){
 		exit(1);
 	}
 
-    vector<int> s;
+    vector<int>* s = new vector<int>;
     int value;
 
     while (getline(input, line))
@@ -254,7 +257,7 @@ vector<int> Ftree::buildRelationFromFile(string dir){
         ssLine << line;
         ssLine >> value;
 
-        s.push_back(value);
+        s->push_back(value);
 
         ssLine.clear();
     }
@@ -344,10 +347,11 @@ void Ftree::initalize(FtreeState init){
                 if(_state.cas[prev->_id].allOne){
                     ca.prefix_sum = prev->_endVec;
                 }else{
-                    vector<int> prefix_sum;
-                    vector<int> pre_prefix_sum = _state.cas[prev->_id].prefix_sum;
-                    for(int i : prev->_endVec){
-                        prefix_sum.push_back(pre_prefix_sum[i - 1]);
+                    // memory leak!!!
+                    vector<int>* prefix_sum = new vector<int>();
+                    vector<int>* pre_prefix_sum = _state.cas[prev->_id].prefix_sum;
+                    for(int i : *(prev->_endVec)){
+                        prefix_sum->push_back(pre_prefix_sum->at(i - 1));
                     }
                     ca.prefix_sum = prefix_sum;
                 }
@@ -371,10 +375,10 @@ void Ftree::initalize(FtreeState init){
                 if(_state.cas[prev->_id].allOne){
                     ca.prefix_sum = prev->_endVec;
                 }else{
-                    vector<int> prefix_sum;
-                    vector<int> pre_prefix_sum = _state.cas[prev->_id].prefix_sum;
-                    for(int i : prev->_endVec){
-                        prefix_sum.push_back(pre_prefix_sum[i - 1]);
+                    vector<int>* prefix_sum = new vector<int>();
+                    vector<int>* pre_prefix_sum = _state.cas[prev->_id].prefix_sum;
+                    for(int i : *(prev->_endVec)){
+                        prefix_sum->push_back(pre_prefix_sum->at(i - 1));
                     }
                     ca.prefix_sum = prefix_sum;
                 }
@@ -470,7 +474,7 @@ void Ftree::initalize(FtreeState init){
             cout << " allOne";
         }else{
             cout << " value: ";
-            for(int i: it2->second.prefix_sum){
+            for(int i: *(it2->second.prefix_sum)){
                 cout << i << " ";
             }
 
@@ -731,14 +735,14 @@ Matrix* FtreeCofactor::Cofactor(){
                         double cell_result = 0;
 
                         if(ca.allOne){
-                            for(unsigned int p = 0; p < f1->_value.size(); p++){
-                                cell_result += f1->_value[p] * f2->_value[p];
+                            for(unsigned int p = 0; p < f1->_value->size(); p++){
+                                cell_result += f1->_value->at(p) * f2->_value->at(p);
                             }
                             
                         }else{
-                            for(unsigned int p = 0; p < f1->_value.size(); p++){
-                                int prev = (p==0? 0: ca.prefix_sum[p-1]);
-                                cell_result += f1->_value[p] * f2->_value[p] * (ca.prefix_sum[p] - prev);
+                            for(unsigned int p = 0; p < f1->_value->size(); p++){
+                                int prev = (p==0? 0: ca.prefix_sum->at(p-1));
+                                cell_result += f1->_value->at(p) * f2->_value->at(p) * (ca.prefix_sum->at(p) - prev);
                             }
                         }
 
@@ -771,28 +775,28 @@ Matrix* FtreeCofactor::Cofactor(){
                             double left = 0;
 
                             if(ca2.allOne){
-                                for(unsigned int p = 0; p < f2->_value.size(); p++){
-                                    left += f2->_value[p];
+                                for(unsigned int p = 0; p < f2->_value->size(); p++){
+                                    left += f2->_value->at(p);
                                 }
                                 
                             }else{
-                                for(unsigned int p = 0; p < f2->_value.size(); p++){
-                                    int prev = (p==0? 0: ca2.prefix_sum[p-1]);
-                                    left += f2->_value[p] * (ca2.prefix_sum[p] - prev);
+                                for(unsigned int p = 0; p < f2->_value->size(); p++){
+                                    int prev = (p==0? 0: ca2.prefix_sum->at(p-1));
+                                    left += f2->_value->at(p) * (ca2.prefix_sum->at(p) - prev);
                                 }
                             }
 
                             double right = 0;
 
                             if(ca1.allOne){
-                                for(unsigned int p = 0; p < f1->_value.size(); p++){
-                                    right += f1->_value[p];
+                                for(unsigned int p = 0; p < f1->_value->size(); p++){
+                                    right += f1->_value->at(p);
                                 }
                                 
                             }else{
-                                for(unsigned int p = 0; p < f1->_value.size(); p++){
-                                    int prev = (p==0? 0: ca1.prefix_sum[p-1]);
-                                    right += f1->_value[p] * (ca1.prefix_sum[p] - prev);
+                                for(unsigned int p = 0; p < f1->_value->size(); p++){
+                                    int prev = (p==0? 0: ca1.prefix_sum->at(p-1));
+                                    right += f1->_value->at(p) * (ca1.prefix_sum->at(p) - prev);
                                 }
                             }
 
@@ -814,23 +818,23 @@ Matrix* FtreeCofactor::Cofactor(){
                             // ca2 is the last level in the hierarchy
                             if(ca2.allOne){
                                 int rightp = 0;
-                                for(int leftp = 0; leftp < signed(f2->_value.size()); leftp++){
-                                    if(leftp + 1 > ca1.prefix_sum[rightp]){
+                                for(int leftp = 0; leftp < signed(f2->_value->size()); leftp++){
+                                    if(leftp + 1 > ca1.prefix_sum->at(rightp)){
                                         rightp++;
                                     }
-                                    cell_result += f1->_value[rightp] * f2->_value[leftp];
+                                    cell_result += f1->_value->at(rightp) * f2->_value->at(leftp);
                                   
                                 }
 
                             }else{
                                 int rightp = 0;
-                                for(unsigned int leftp = 0; leftp < f2->_value.size(); leftp++){
+                                for(unsigned int leftp = 0; leftp < f2->_value->size(); leftp++){
                                     if(ca2.prefix_sum[leftp] > ca1.prefix_sum[rightp]){
                                         rightp++;
                                     }
 
-                                    int prev = (leftp==0? 0: ca2.prefix_sum[leftp-1]);
-                                    cell_result += f1->_value[rightp] * f2->_value[leftp] * (ca2.prefix_sum[leftp] - prev);
+                                    int prev = (leftp==0? 0: ca2.prefix_sum->at(leftp-1));
+                                    cell_result += f1->_value->at(rightp) * f2->_value->at(leftp) * (ca2.prefix_sum->at(leftp) - prev);
                                 }
 
                             }
@@ -905,13 +909,13 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
                 double cell_result = 0;
                 int start = 0;
                 for(int k = 0; k < (int) total/total_i; k++){
-                    for(unsigned int p = 0; p < f->_value.size(); p++){
+                    for(unsigned int p = 0; p < f->_value->size(); p++){
                         int length = 0;
                         if(ca.allOne){
                             length = ca.leftCount;
                         }else{
-                            int prev = (p==0? 0: ca.prefix_sum[p-1]);
-                            length = (ca.prefix_sum[p] - prev) * ca.leftCount;
+                            int prev = (p==0? 0: ca.prefix_sum->at(p-1));
+                            length = (ca.prefix_sum->at(p) - prev) * ca.leftCount;
                         }
 
                         double rangeSum = 0;
@@ -921,7 +925,7 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
                             rangeSum = left_vec[j][start + length - 1] - left_vec[j][start - 1];
                         }
 
-                        cell_result += rangeSum * f->_value[p];
+                        cell_result += rangeSum * (f->_value->at(p));
 
                         start += length;
                     }

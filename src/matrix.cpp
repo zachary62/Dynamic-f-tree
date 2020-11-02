@@ -30,7 +30,7 @@ Matrix* Matrix::rightMultiply(Matrix* right){
         }
         result.push_back(result_row);
     }
-
+    // memory!!
     Matrix* mx = new Matrix(result);
     return mx;
 }

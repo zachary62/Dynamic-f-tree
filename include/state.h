@@ -15,7 +15,8 @@ struct CountAtt
   int id;
   int leftCount;
   bool allOne;
-  std::vector<int> prefix_sum;
+  // memory leak!!
+  std::vector<int>* prefix_sum;
 };
 
 struct CountCof

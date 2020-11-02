@@ -116,6 +116,65 @@ void test_build_ftree(string directory){
 
 }
 
+// used on small data
+void test_operation_verbose(string directory){
+
+    Ftree t(directory);
+    FtreeState fState = {};
+    fState._attr_order = t._a;
+    t.initalize(fState);
+    cout << "Feature Matrix from Ftree\n";
+    FtreeToFeatureMatrix fm(fState);
+    Matrix* mx1 = fm.toMatrix();
+    mx1->printSelf();
+    cout << "__________________\n";
+    cout << "Cofactor from Ftree\n";
+    FtreeCofactor fc(t._state);
+    fc.Cofactor()->printSelf();
+    cout << "__________________\n";
+    cout << "Cofactor from Matrix\n";
+    mx1->cofactor()->printSelf();
+    cout << "__________________\n";
+    vector<vector<double> > right_to_mul;
+    for(int i = 0; i < t._num_f; i++){
+        vector<double> row;
+        row.push_back(1.01);
+        right_to_mul.push_back(row);
+    }
+    Matrix mx2(right_to_mul);
+
+    cout << "Right mul from Ftree\n";
+    FtreeRightMultiplication frm(t._state);
+    frm.RightMultiply(&mx2)->printSelf();
+
+    cout << "__________________\n";
+    cout << "Right mul from Matrix\n";
+    mx1->rightMultiply(&mx2)->printSelf();
+
+    Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
+    int total = c_first.leftCount * c_first.value;
+
+    vector<vector<double> > left_to_mul;
+    vector<double> row;
+    for(int i = 0; i < total; i++){
+        row.push_back(1.01);
+    }
+    left_to_mul.push_back(row);
+    Matrix mx3(left_to_mul);
+
+    cout << "__________________\n";
+    cout << "Left mul from Ftree\n";
+
+    FtreeLeftMultiplication flm(t._state);
+    flm.LeftMultiply(&mx3)->printSelf();
+    cout << "__________________\n";
+    cout << "Left mul from Matrix\n";
+    mx3.rightMultiply(mx1)->printSelf();
+
+
+
+}
+
 int main(int argc, char *argv[])
 {
     if(argc <=1 ){
@@ -126,16 +185,11 @@ int main(int argc, char *argv[])
     string directory(argv[1]);
 
     test_build_ftree(directory);
+    // test_matrix_op(directory);
+    // test_operation_verbose(directory);
 
-
-    // t.initalize(fState);
     
 
-
-    // FtreeToFeatureMatrix fm(fState);
-    // Matrix* mx1 = fm.toMatrix();
-    // mx1->printSelf();
-    // cout << "__________________\n";
     // std::vector<std::vector<double> > m2 { { 1, 4, 5, 6, 1, 3, 4, 5, 7, 2, 3, 7, 6, 1, 3, 4},
     //                                        { 2, 2,12, 3, 2, 2,12, 3, 6, 1, 3, 4, 2, 2,12, 3}};
     // Matrix mx2(m2);

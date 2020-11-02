@@ -8,15 +8,15 @@ class Attribute
 {
 public:
     Attribute(int num_values, int id,  std::vector<Feature*> fs);
+    ~Attribute();
     void printEnd();
-    void setEnd(std::vector<int> end);
+    void setEnd(std::vector<int>* end);
     std::vector<double> getFeatures(int index);
     
     int _id;
     int _num_values;
     std::vector<Feature*> _fs;
-    std::vector<int> _endVec;
-    std::unordered_set<int> _endSet;
+    std::vector<int>* _endVec;
 };
 
 class AttributeRowIter
@@ -28,5 +28,6 @@ public:
 private:
     const Attribute& _a;
     int cur;
+    int next_check;
 
 };

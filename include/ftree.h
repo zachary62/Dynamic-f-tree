@@ -54,8 +54,8 @@ public:
 private:
     void buildFromFile(std::string dir);
 
-    std::vector<double> buildFeatureFromFile(std::string dir);
-    std::vector<int> buildRelationFromFile(std::string dir);
+    std::vector<double>* buildFeatureFromFile(std::string dir);
+    std::vector<int>* buildRelationFromFile(std::string dir);
     
     
 
