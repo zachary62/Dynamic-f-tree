@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
     
     string directory(argv[1]);
 
-    test_matrix_op(directory);
+    test_build_ftree(directory);
 
 
     // t.initalize(fState);

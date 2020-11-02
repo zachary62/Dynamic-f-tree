@@ -7,11 +7,11 @@
 # for each attribute, list its number of values, and feature ids
 
 10 1 2 3 4 5
-50 6 7 8 9 10
-100 11 12 13 14 15
+10000 6 7 8 9 10
+10000000 11 12 13 14 15
 10 16 17 18 19 20
-50 21 22 23 24 25
-100 26 27 28 29 30
+10000 21 22 23 24 25
+10000000 26 27 28 29 30
 
 # for each dimension, list its attribute ids
 
