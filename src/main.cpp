@@ -101,6 +101,21 @@ void test_matrix_op(string directory){
 
 }
 
+void test_build_ftree(string directory){
+    
+    clock_t start;
+    double duration;
+
+    start = clock();
+    Ftree t(directory);
+    FtreeState fState = {};
+    fState._attr_order = t._a;
+    t.initalize(fState);
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time to build F-tree: " << duration << "\n";    
+
+}
+
 int main(int argc, char *argv[])
 {
     if(argc <=1 ){
