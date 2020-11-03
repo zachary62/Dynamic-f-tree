@@ -105,7 +105,7 @@ void test_build_ftree(string directory){
     
     clock_t start;
     double duration;
-    
+
 
     start = clock();
     Ftree t(directory);
@@ -250,7 +250,7 @@ void test_drill_down(string directory){
     
     clock_t start;
     double duration;
-    cout <<"hi\n";
+
     start = clock();
     Ftree t(directory);
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
@@ -258,6 +258,13 @@ void test_drill_down(string directory){
 
     start = clock();
     FtreeState fState = {};
+    vector<Attribute*> att_vec;
+    for(int i = 0; i < t._num_d; i++){
+        att_vec.push_back(t._a[4*i]);
+        att_vec.push_back(t._a[4*i + 1]);
+    }
+    fState._attr_order = att_vec;
+
     t.initalize(fState); 
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
     cout << "time to intialize: " << duration << "\n"; 
@@ -299,7 +306,13 @@ void test_drill_down(string directory){
     for(int i = 0; i < t._num_d; i++){
         FtreeState fState2 = {};
         vector<Attribute*> att_v;
-        att_v.push_back(t._a[i*3]);
+        for(int j = 0; j < t._num_d; j++){
+            att_v.push_back(t._a[4*j]);
+            att_v.push_back(t._a[4*j + 1]);
+            if(i == j){
+                att_v.push_back(t._a[4*j + 2]);
+            }
+        }   
         fState2._attr_order = att_v;
         t.initalize(fState2); 
     }
@@ -311,14 +324,33 @@ void test_drill_down(string directory){
         FtreeState fState2 = {};
         vector<Attribute*> att_v;
         att_v.push_back(t._a[0]);
-        att_v.push_back(t._a[i*3]);
+        att_v.push_back(t._a[1]);
+        att_v.push_back(t._a[2]);
+        for(int j = 1; j < t._num_d; j++){
+            att_v.push_back(t._a[4*j]);
+            att_v.push_back(t._a[4*j + 1]);
+            if(i == j){
+                att_v.push_back(t._a[4*j + 2]);
+            }
+        }   
+        
         fState2._attr_order = att_v;
         t.initalize(fState2); 
     }
+
     FtreeState fState3 = {};
     vector<Attribute*> att_v2;
+
     att_v2.push_back(t._a[0]);
     att_v2.push_back(t._a[1]);
+    att_v2.push_back(t._a[2]);
+    att_v2.push_back(t._a[3]);
+
+    for(int i = 1; i < t._num_d; i++){
+        att_v2.push_back(t._a[4*i]);
+        att_v2.push_back(t._a[4*i + 1]);
+    }   
+
     fState3._attr_order = att_v2;
     t.initalize(fState3); 
 

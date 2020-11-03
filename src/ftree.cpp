@@ -346,6 +346,7 @@ void Ftree::initalize(FtreeState init){
                     // memory leak!!!
                     vector<int>* prefix_sum = new vector<int>();
                     vector<int>* pre_prefix_sum = _state.cas[prev->_id].prefix_sum;
+                    
                     for(int i : *(prev->_endVec)){
                         prefix_sum->push_back(pre_prefix_sum->at(i - 1));
                     }
@@ -373,6 +374,7 @@ void Ftree::initalize(FtreeState init){
                 }else{
                     vector<int>* prefix_sum = new vector<int>();
                     vector<int>* pre_prefix_sum = _state.cas[prev->_id].prefix_sum;
+       
                     for(int i : *(prev->_endVec)){
                         prefix_sum->push_back(pre_prefix_sum->at(i - 1));
                     }
