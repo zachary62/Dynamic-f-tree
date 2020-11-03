@@ -246,7 +246,7 @@ void test_operation_verbose(string directory){
 }
 
 // only run this test on dataset in ./data/dimhie/
-void test_drill_down(string directory){
+void test_drill_down(string directory, int atts){
     
     clock_t start;
     double duration;
@@ -260,8 +260,10 @@ void test_drill_down(string directory){
     FtreeState fState = {};
     vector<Attribute*> att_vec;
     for(int i = 0; i < t._num_d; i++){
-        att_vec.push_back(t._a[4*i]);
-        att_vec.push_back(t._a[4*i + 1]);
+        for(int k = 0 ; k < atts; k++){
+            att_vec.push_back(t._a[7*i + k]);
+        }
+        
     }
     fState._attr_order = att_vec;
    
@@ -307,10 +309,12 @@ void test_drill_down(string directory){
         FtreeState fState2 = {};
         vector<Attribute*> att_v;
         for(int j = 0; j < t._num_d; j++){
-            att_v.push_back(t._a[4*j]);
-            att_v.push_back(t._a[4*j + 1]);
+            for(int k = 0; k < atts; k++){
+                att_v.push_back(t._a[7*j + k]);
+            }
+
             if(i == j){
-                att_v.push_back(t._a[4*j + 2]);
+                att_v.push_back(t._a[7*j + atts]);
             }
         }   
         fState2._attr_order = att_v;
@@ -323,14 +327,16 @@ void test_drill_down(string directory){
     for(int i = 1; i < t._num_d; i++){
         FtreeState fState2 = {};
         vector<Attribute*> att_v;
-        att_v.push_back(t._a[0]);
-        att_v.push_back(t._a[1]);
-        att_v.push_back(t._a[2]);
+        for(int k = 0; k < atts + 1; k++){
+            att_v.push_back(t._a[k]);
+        }
+
         for(int j = 1; j < t._num_d; j++){
-            att_v.push_back(t._a[4*j]);
-            att_v.push_back(t._a[4*j + 1]);
+            for(int k = 0; k < atts; k++){
+                att_v.push_back(t._a[7*j + k]);
+            }
             if(i == j){
-                att_v.push_back(t._a[4*j + 2]);
+                att_v.push_back(t._a[7*j + atts]);
             }
         }   
         
@@ -340,15 +346,14 @@ void test_drill_down(string directory){
 
     FtreeState fState3 = {};
     vector<Attribute*> att_v2;
-
-    att_v2.push_back(t._a[0]);
-    att_v2.push_back(t._a[1]);
-    att_v2.push_back(t._a[2]);
-    att_v2.push_back(t._a[3]);
+    for(int k = 0; k < atts + 2; k++){
+        att_v2.push_back(t._a[k]);
+    }
 
     for(int i = 1; i < t._num_d; i++){
-        att_v2.push_back(t._a[4*i]);
-        att_v2.push_back(t._a[4*i + 1]);
+        for(int k = 0; k < atts; k++){
+            att_v2.push_back(t._a[7*i + k]);
+        }
     }   
 
     fState3._attr_order = att_v2;
@@ -371,7 +376,7 @@ int main(int argc, char *argv[])
     // test_build_ftree(directory);
     // test_matrix_op(directory);
     // test_operation_verbose(directory);
-    test_drill_down(directory);
+    test_drill_down(directory, 4);
     // Ftree t(directory);
     // vector<Attribute*> att_v;
 
