@@ -6,14 +6,14 @@
 struct Count
 {
   int id;
-  int leftCount;
+  long long leftCount;
   int value;
 };
 
 struct CountAtt
 {
   int id;
-  int leftCount;
+  long long leftCount;
   bool allOne;
   // memory leak!!
   std::vector<int>* prefix_sum;
@@ -23,7 +23,7 @@ struct CountCof
 {
   int id1;
   int id2;
-  int middleCount;
+  long long middleCount;
   bool cartesian;
 };
 

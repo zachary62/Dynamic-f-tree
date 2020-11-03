@@ -1,5 +1,5 @@
 relation_size = 10
-num_dim = 10
+num_dim = 3
 
 for i in range(1,4*num_dim + 1,1):
         f = open("f" + str(i), "w")

@@ -264,7 +264,7 @@ void test_drill_down(string directory){
         att_vec.push_back(t._a[4*i + 1]);
     }
     fState._attr_order = att_vec;
-
+   
     t.initalize(fState); 
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
     cout << "time to intialize: " << duration << "\n"; 
@@ -355,7 +355,7 @@ void test_drill_down(string directory){
     t.initalize(fState3); 
 
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for first drill down without propogate: " << duration << "\n"; 
+    cout << "time for second drill down without propogate: " << duration << "\n"; 
 
 }
 

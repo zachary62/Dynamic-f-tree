@@ -298,7 +298,7 @@ void Ftree::initalize(FtreeState init){
         }
     }    
 
-    
+
     
     for(Dimension* d: _d){
         // currently no attribute in the order
@@ -388,8 +388,8 @@ void Ftree::initalize(FtreeState init){
         
     }
 
-    int leftC = 1;
-    vector<int> prefix_product;
+    long long leftC = 1;
+    vector<long long> prefix_product;
     unordered_map<int, int> dim_index;
     int prev_dim = -1;
     for(int i = _state._attr_order.size() - 1; i >= 0; i--){
@@ -408,9 +408,10 @@ void Ftree::initalize(FtreeState init){
 
     for(int i = _state._attr_order.size() - 1; i >= 0; i--){
         for(int j = i - 1; j >= 0; j--){
+            
             Attribute* a_i = _state._attr_order[i];
             Attribute* a_j = _state._attr_order[j];
-            
+ 
             int dim_i = att_to_dim[a_i->_id];
             int dim_j = att_to_dim[a_j->_id];
 
@@ -604,8 +605,8 @@ FtreeState Ftree::attemptDrillDown(int dim_id, bool cache_allowed){
     
 
 
-    int leftC = 1;
-    vector<int> prefix_product;
+    long long leftC = 1;
+    vector<long long> prefix_product;
     unordered_map<int, int> dim_index;
     int prev_dim = -1;
     for(int i = after._attr_order.size() - 1; i >= 0; i--){
