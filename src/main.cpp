@@ -123,6 +123,69 @@ void test_build_ftree(string directory){
 
 }
 
+void printState(FtreeState _state){
+
+     cout << "Attribute Order:\n";
+    for(Attribute* a: _state._attr_order){
+        cout<< a->_id << " ";
+    }
+    cout << "\n";
+
+    unordered_map<int, Count>::iterator it;
+    cout << "Count:\n";
+    for (it = _state.cs.begin(); it != _state.cs.end(); it++ )
+    {
+        cout << it->first  
+                << " leftCount: "
+                << it->second.leftCount  
+                << " value: "
+                << it->second.value << "\n";
+    }
+
+    unordered_map<int, CountAtt>::iterator it2;
+
+
+    cout << "CountAtt:\n";
+    for (it2 = _state.cas.begin(); it2 != _state.cas.end(); it2++ )
+    {
+        cout << it2->first  
+                << " leftCount: "
+                << it2->second.leftCount;
+
+        if( it2->second.allOne){
+            cout << " allOne";
+        }else{
+            cout << " value: ";
+            for(int i: *(it2->second.prefix_sum)){
+                cout << i << " ";
+            }
+
+        }
+        cout<< "\n";
+
+    }
+
+    cout << "CountCof:\n";
+    for(auto const &ent1 : _state.ccofs) {
+        auto const &outer_key = ent1.first;
+        auto const &inner_map = ent1.second;
+        for(auto const &ent2 : inner_map) {
+            auto const &inner_key   = ent2.first;
+            auto const &inner_value = ent2.second;
+
+            cout<< outer_key << " " << inner_key 
+                // << " leftCount " << inner_value.leftCount
+                << " middleCount " << inner_value.middleCount;
+            if(inner_value.cartesian){
+                cout<<" is cartesian";
+            } else{
+                cout<<" is not cartesian";
+            }
+            cout<< "\n";
+        }
+    }
+ }
+
 // used on small data
 void test_operation_verbose(string directory){
 
@@ -182,6 +245,88 @@ void test_operation_verbose(string directory){
 
 }
 
+// only run this test on dataset in ./data/dimhie/
+void test_drill_down(string directory){
+    
+    clock_t start;
+    double duration;
+    cout <<"hi\n";
+    start = clock();
+    Ftree t(directory);
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time to read files: " << duration << "\n";   
+
+    start = clock();
+    FtreeState fState = {};
+    t.initalize(fState); 
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time to intialize: " << duration << "\n"; 
+
+    start = clock();
+    for(int i = 1; i < t._num_d; i++){
+        t.attemptDrillDown(i+1, true);
+    }
+    t.setState(t.attemptDrillDown(1, true));
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for first drill down with cache: " << duration << "\n"; 
+
+    start = clock();
+    for(int i = 0; i < t._num_d; i++){
+        t.attemptDrillDown(i+1, true);
+    }
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for second drill down with cache: " << duration << "\n"; 
+
+    t.initalize(fState); 
+
+    start = clock();
+    for(int i = 1; i < t._num_d; i++){
+        t.attemptDrillDown(i+1, false);
+    }
+    t.setState(t.attemptDrillDown(1, false));
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for first drill down without cache: " << duration << "\n"; 
+
+    start = clock();
+    for(int i = 0; i < t._num_d; i++){
+        t.attemptDrillDown(i+1, false);
+    }
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for second drill down without cache: " << duration << "\n"; 
+
+
+    start = clock();
+    for(int i = 0; i < t._num_d; i++){
+        FtreeState fState2 = {};
+        vector<Attribute*> att_v;
+        att_v.push_back(t._a[i*3]);
+        fState2._attr_order = att_v;
+        t.initalize(fState2); 
+    }
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for first drill down without propogate: " << duration << "\n"; 
+
+    start = clock();
+    for(int i = 1; i < t._num_d; i++){
+        FtreeState fState2 = {};
+        vector<Attribute*> att_v;
+        att_v.push_back(t._a[0]);
+        att_v.push_back(t._a[i*3]);
+        fState2._attr_order = att_v;
+        t.initalize(fState2); 
+    }
+    FtreeState fState3 = {};
+    vector<Attribute*> att_v2;
+    att_v2.push_back(t._a[0]);
+    att_v2.push_back(t._a[1]);
+    fState3._attr_order = att_v2;
+    t.initalize(fState3); 
+
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for first drill down without propogate: " << duration << "\n"; 
+
+}
+
 int main(int argc, char *argv[])
 {
     if(argc <=1 ){
@@ -191,56 +336,40 @@ int main(int argc, char *argv[])
     
     string directory(argv[1]);
 
-    test_build_ftree(directory);
+    // test_build_ftree(directory);
     // test_matrix_op(directory);
     // test_operation_verbose(directory);
+    test_drill_down(directory);
+    // Ftree t(directory);
+    // vector<Attribute*> att_v;
 
-    
-
-    // std::vector<std::vector<double> > m2 { { 1, 4, 5, 6, 1, 3, 4, 5, 7, 2, 3, 7, 6, 1, 3, 4},
-    //                                        { 2, 2,12, 3, 2, 2,12, 3, 6, 1, 3, 4, 2, 2,12, 3}};
-    // Matrix mx2(m2);
-
-    // Matrix* mx3 = mx2.rightMultiply(mx1);
-    // mx3->printSelf();
-
-    // cout<< "--------------\n";
-    // FtreeLeftMultiplication flm(t._state);
-    // Matrix* mx4 = flm.LeftMultiply(&mx2);
-    // mx4->printSelf();   
-
-    // Matrix* mx3 = mx1->rightMultiply(&mx2);
-    // mx3->printSelf();
-
-    // cout<< "--------------\n";
-    // FtreeRightMultiplication frm(fState);
-    // Matrix* mx4 = frm.RightMultiply(&mx2);
-    // mx4->printSelf();   
-    
+    // FtreeState fState = {};
+    // fState._attr_order = att_v;
+    // // fState._attr_order = t._a;
 
 
-    // clock_t start;
-    // double duration;
 
-    // start = clock();
 
-    // for(int i = 0; i< 100;i++){
-    //     FtreeToAttrMatrix fm(t);
-    //     fm.toMatrix();
-    // }
+    // t.initalize(fState); 
+    // printState(t.attemptDrillDown(1));
+    // t.setState(t.attemptDrillDown(1));
+    // cout << "__________________\n";
+    // // t.setState(t.attemptDrillDown(1));
+    // printState(t.attemptDrillDown(1));
 
-    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    // cout << "time pasted: " << duration << "\n";
 
-    // AttributeRowIter iter(t._a[3]);
-    // IterReply r =  iter.next();
-    // cout<< r.value <<"\n";
-    // r =  iter.next();
-    // cout<< r.value <<"\n";
-    //     r =  iter.next();
-    // cout<< r.value <<"\n";
-    //     r =  iter.next();
-    // cout<< r.value <<"\n";
+    // FtreeState fState2 = {};
+    // vector<Attribute*> att_v2;
+    // att_v2.push_back(t._a[0]);
+    // att_v2.push_back(t._a[1]);
+    // att_v2.push_back(t._a[2]);
+
+    // fState2._attr_order = att_v2;
+    // Ftree t2(directory);
+    // t2.initalize(fState2);
+    // cout << "__________________\n";
+    // printState(t2._state);
+
 
 }
 

@@ -34,14 +34,17 @@ struct FtreeState
   // attribute id to state
   std::unordered_map<int, Count> cs;
   std::unordered_map<int, CountAtt> cas;
-  std::unordered_map<int,std::unordered_map<int,CountCof>> ccofs;
-  std::unordered_map<int,int> countDiv;
+  std::unordered_map<int, std::unordered_map<int,CountCof>> ccofs;
+  
+  // dimension id to state
+  std::unordered_map<int, int> countDiv;
 
+  // dim_id -> next attribute_id to drill down
+  std::unordered_map<int, int> _toDrillDown;
 
 };
 
 struct DimCache
 { 
-  std::vector<CountAtt> cas;
-  std::vector<std::vector<CountCof>> ccofs;
+  std::unordered_map<int,CountAtt> cas;
 };

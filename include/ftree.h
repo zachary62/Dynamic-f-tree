@@ -17,16 +17,12 @@ public:
     ~Ftree();
 
     void initalize(FtreeState init);
-    void printState();
 
     // return a copy of new state
-    FtreeState attemptDrillDown(int dim_id);
-
-    // return a copy of new state
-    std::vector<FtreeState> attemptAllDrillDown();
+    FtreeState attemptDrillDown(int dim_id, bool cache_allowed);
 
     // return a copy of state as well as update own state
-    FtreeState DrillDown(int dim_id);
+    void setState(FtreeState fstate);
     
 
     // feature, attribute and dimenson
@@ -34,13 +30,13 @@ public:
     std::vector<Attribute*> _a;
     std::vector<Dimension*> _d;
 
-    // dim_id -> next attribute_id to drill down
-    std::unordered_map<int,int> _toDrillDown;
 
-    // use key to the cache value
-    // for example, for dimension 2 attr 4
-    // string would be "2_4"
-    std::unordered_map<std::string,DimCache> _cache;
+    std::unordered_map<int,int> att_to_dim;
+    // location of att in dim._as
+    std::unordered_map<int,int> att_to_index;
+
+    // use dim_id, todrillDown att_id to the cache value
+    std::unordered_map<int,std::unordered_map<int,DimCache>> _cache;
 
     int _num_f;
     int _num_a;

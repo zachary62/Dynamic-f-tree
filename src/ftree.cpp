@@ -268,17 +268,13 @@ vector<int>* Ftree::buildRelationFromFile(string dir){
 void Ftree::initalize(FtreeState init){
     _state = init;
 
-    unordered_map<int,int> att_to_dim;
-    // location of att in dim._as
-    unordered_map<int,int> att_to_index;
-
     for(Dimension* d: _d){
         for(unsigned int i = 0; i < d->_as.size(); i++){
             Attribute* a =  d->_as[i];
             att_to_dim[a->_id] = d->_id;
             att_to_index[a->_id] = i;
         }
-        _toDrillDown[d->_id] = d->_as[0]->_id;
+        _state._toDrillDown[d->_id] = d->_as[0]->_id;
         
     }
 
@@ -288,17 +284,17 @@ void Ftree::initalize(FtreeState init){
         Attribute* a =  _state._attr_order[i];
         Dimension* d = _d[att_to_dim[a->_id]-1];
        
-        if(_toDrillDown[d->_id] != a->_id){
-            cout<< "Attribute order is illegal! Should: "<< _toDrillDown[d->_id]<< " get " << a->_id<<"\n";
+        if( _state._toDrillDown[d->_id] != a->_id){
+            cout<< "Attribute order is illegal! Should: "<< _state._toDrillDown[d->_id]<< " get " << a->_id<<"\n";
             exit(1);
         }
 
         // if a is the last attribute in d
         if(d->_as[d->_as.size() - 1]->_id == a->_id){
             // further drill down is invalid
-            _toDrillDown[d->_id] = -1;
+            _state._toDrillDown[d->_id] = -1;
         } else{
-            _toDrillDown[d->_id] = d->_as[att_to_index[a->_id] + 1]->_id;
+            _state._toDrillDown[d->_id] = d->_as[att_to_index[a->_id] + 1]->_id;
         }
     }    
 
@@ -306,21 +302,21 @@ void Ftree::initalize(FtreeState init){
     
     for(Dimension* d: _d){
         // currently no attribute in the order
-        if (_toDrillDown[d->_id] == d->_as[0]->_id){
+        if (_state._toDrillDown[d->_id] == d->_as[0]->_id){
             _state.countDiv[d->_id] = 1;
         } 
         // all attributes in the order
-        else if(_toDrillDown[d->_id] == -1){
+        else if(_state._toDrillDown[d->_id] == -1){
             _state.countDiv[d->_id] = d->_as[d->_as.size()-1]->_num_values;
         } else{
             
-            int a_id = _toDrillDown[d->_id];
+            int a_id = _state._toDrillDown[d->_id];
             _state.countDiv[d->_id] = d->_as[att_to_index[a_id]-1]->_num_values;
         }
   
         // count
         for(Attribute* a: d->_as){
-            if(a->_id ==  _toDrillDown[d->_id]){
+            if(a->_id ==  _state._toDrillDown[d->_id]){
                 break;
             }
             Count c{};
@@ -329,9 +325,9 @@ void Ftree::initalize(FtreeState init){
             _state.cs[a->_id] = c;
         }
 
-        // cout<< "for dim " << d->_id<< " to drill down " << _toDrillDown[d->_id] << "\n";
+        
         // countAtt
-        if(_toDrillDown[d->_id] == -1){
+        if(_state._toDrillDown[d->_id] == -1){
             CountAtt last{};
             Attribute* last_a = d->_as[d->_as.size() - 1];
             last.id = last_a->_id;
@@ -358,14 +354,14 @@ void Ftree::initalize(FtreeState init){
                 _state.cas[cur->_id] = ca;
             }
         // check if this dimension is even involved in current order
-        }else if(_toDrillDown[d->_id] != d->_as[0]->_id){
+        }else if(_state._toDrillDown[d->_id] != d->_as[0]->_id){
             CountAtt last{};
-            Attribute* last_a = d->_as[att_to_index[_toDrillDown[d->_id]] - 1];
+            Attribute* last_a = d->_as[att_to_index[_state._toDrillDown[d->_id]] - 1];
             last.id = last_a->_id;
             last.allOne = true;
             _state.cas[last_a->_id] = last;
 
-            for(int i = signed(att_to_index[_toDrillDown[d->_id]]) - 2; i >= 0; i--){
+            for(int i = signed(att_to_index[_state._toDrillDown[d->_id]]) - 2; i >= 0; i--){
                 Attribute* prev = d->_as[i + 1];
                 Attribute* cur = d->_as[i];
                 CountAtt ca{};
@@ -433,7 +429,6 @@ void Ftree::initalize(FtreeState init){
                 ccf.cartesian = false;
                 _state.ccofs[a_i->_id][a_j->_id] = ccf;
             }
-
         }
     }
 
@@ -441,70 +436,226 @@ void Ftree::initalize(FtreeState init){
 
 }
 
- void Ftree::printState(){
+FtreeState Ftree::attemptDrillDown(int dim_id, bool cache_allowed){
 
-     cout << "Attribute Order:\n";
+    if(_state._toDrillDown[dim_id] == -1){
+        cout << "Invalid drill down operation\n";
+        exit(1);
+    }
+    
+    unordered_map<int, int> att_to_old_index;
+
+    for(unsigned int i = 0; i < _state._attr_order.size(); i++){
+        att_to_old_index[_state._attr_order[i]->_id] = i;
+    }
+
+    FtreeState after = _state;
+
+    // update after order
+    std::vector<Attribute*> _after_order;
+    
+    // other attirbutes in the same order as before
     for(Attribute* a: _state._attr_order){
-        cout<< a->_id << " ";
+        if(att_to_dim[a->_id] != dim_id){
+            _after_order.push_back(a);
+        }
     }
-    cout << "\n";
-
-    unordered_map<int, Count>::iterator it;
-    cout << "Count:\n";
-    for (it = _state.cs.begin(); it != _state.cs.end(); it++ )
-    {
-        cout << it->first  
-                << " leftCount: "
-                << it->second.leftCount  
-                << " value: "
-                << it->second.value << "\n";
-    }
-
-    unordered_map<int, CountAtt>::iterator it2;
-
-
-    cout << "CountAtt:\n";
-    for (it2 = _state.cas.begin(); it2 != _state.cas.end(); it2++ )
-    {
-        cout << it2->first  
-                << " leftCount: "
-                << it2->second.leftCount;
-
-        if( it2->second.allOne){
-            cout << " allOne";
+ 
+    // attributes in the new dimension are placed last
+    for(Attribute* a: _d[dim_id -1]->_as){
+        
+        if(a->_id != _state._toDrillDown[dim_id]){
+            _after_order.push_back(a);
         }else{
-            cout << " value: ";
-            for(int i: *(it2->second.prefix_sum)){
-                cout << i << " ";
-            }
-
+            break;
         }
-        cout<< "\n";
+    }
+    
+    
 
+    _after_order.push_back(_a[_state._toDrillDown[dim_id]-1]);
+
+    after._attr_order =  _after_order;
+    
+    // update toDrillDown
+    if(_d[dim_id -1]->_as[_d[dim_id -1]->_as.size() - 1]->_id == _state._toDrillDown[dim_id]){
+        // further drill down is invalid
+        after._toDrillDown[dim_id] = -1;
+    } else{
+        after._toDrillDown[dim_id] = _d[dim_id -1]->_as[att_to_index[_state._toDrillDown[dim_id]] + 1]->_id;
     }
 
-    cout << "CountCof:\n";
-    for(auto const &ent1 : _state.ccofs) {
-        auto const &outer_key = ent1.first;
-        auto const &inner_map = ent1.second;
-        for(auto const &ent2 : inner_map) {
-            auto const &inner_key   = ent2.first;
-            auto const &inner_value = ent2.second;
-
-            cout<< outer_key << " " << inner_key 
-                // << " leftCount " << inner_value.leftCount
-                << " middleCount " << inner_value.middleCount;
-            if(inner_value.cartesian){
-                cout<<" is cartesian";
-            } else{
-                cout<<" is not cartesian";
-            }
-            cout<< "\n";
-        }
+    // update countDiv
+    if(after._toDrillDown[dim_id] == -1){
+            after.countDiv[dim_id] = _d[dim_id -1]->_as[_d[dim_id -1]->_as.size()-1]->_num_values;
+    } else{     
+        int a_id = after._toDrillDown[_d[dim_id -1]->_id];
+        after.countDiv[dim_id] = _d[dim_id -1]->_as[att_to_index[a_id]-1]->_num_values;
     }
   
 
- }
+
+
+    // COUNT of attributes inside of dimension
+    for(Attribute* a: _d[dim_id -1]->_as){
+        if(a->_id ==  after._toDrillDown[dim_id]){
+            break;
+        }
+        Count c{};
+        c.id = a->_id;
+        c.value = after.countDiv[dim_id];
+        after.cs[a->_id] = c;
+    }
+
+    // countAtt
+
+    // check cache
+    bool cached = false;
+    if(cache_allowed && (_cache.find(dim_id) != _cache.end())){
+        if(_cache[dim_id].find(after._toDrillDown[dim_id]) != _cache[dim_id].end()){
+            DimCache cache  = _cache[dim_id][after._toDrillDown[dim_id]];
+            if(after._toDrillDown[dim_id] == -1){
+                for(int i = signed(_d[dim_id -1]->_as.size()) - 1; i >= 0; i--){
+                    after.cas[_d[dim_id -1]->_as[i]->_id] = cache.cas[_d[dim_id -1]->_as[i]->_id];
+                }
+            }
+            else{
+                for(int i = signed(att_to_index[after._toDrillDown[_d[dim_id -1]->_id]]) - 1; i >= 0; i--){
+                    after.cas[_d[dim_id -1]->_as[i]->_id] = cache.cas[_d[dim_id -1]->_as[i]->_id];
+                }
+            }
+            cached = true;
+        }
+    }
+    if(!cached){
+        // compute countAtt
+        if(after._toDrillDown[dim_id] == -1){
+            CountAtt last{};
+            Attribute* last_a = _d[dim_id -1]->_as[_d[dim_id -1]->_as.size() - 1];
+            last.id = last_a->_id;
+            last.allOne = true;
+            after.cas[last_a->_id] = last;
+            
+            for(int i = signed(_d[dim_id -1]->_as.size()) - 2; i >= 0; i--){
+                Attribute* prev = _d[dim_id -1]->_as[i + 1];
+                Attribute* cur = _d[dim_id -1]->_as[i];
+                CountAtt ca{};
+                ca.id = cur->_id;
+                ca.allOne = false;
+                if(after.cas[prev->_id].allOne){
+                    ca.prefix_sum = prev->_endVec;
+                }else{
+                    // memory leak!!!
+                    vector<int>* prefix_sum = new vector<int>();
+                    vector<int>* pre_prefix_sum = after.cas[prev->_id].prefix_sum;
+                    for(int i : *(prev->_endVec)){
+                        prefix_sum->push_back(pre_prefix_sum->at(i - 1));
+                    }
+                    ca.prefix_sum = prefix_sum;
+                }
+                after.cas[cur->_id] = ca;
+            }
+        // check if this dimension is even involved in current order
+        }
+        else if(after._toDrillDown[_d[dim_id -1]->_id] != _d[dim_id -1]->_as[0]->_id){
+            CountAtt last{};
+            Attribute* last_a = _d[dim_id -1]->_as[att_to_index[after._toDrillDown[_d[dim_id -1]->_id]] - 1];
+            last.id = last_a->_id;
+            last.allOne = true;
+            after.cas[last_a->_id] = last;
+
+            for(int i = signed(att_to_index[after._toDrillDown[_d[dim_id -1]->_id]]) - 2; i >= 0; i--){
+                Attribute* prev = _d[dim_id -1]->_as[i + 1];
+                Attribute* cur = _d[dim_id -1]->_as[i];
+                CountAtt ca{};
+                ca.id = cur->_id;
+                ca.allOne = false;
+
+                if(after.cas[prev->_id].allOne){
+                    ca.prefix_sum = prev->_endVec;
+                }else{
+                    vector<int>* prefix_sum = new vector<int>();
+                    vector<int>* pre_prefix_sum = after.cas[prev->_id].prefix_sum;
+                    for(int i : *(prev->_endVec)){
+                        prefix_sum->push_back(pre_prefix_sum->at(i - 1));
+                    }
+                    ca.prefix_sum = prefix_sum;
+                }
+                after.cas[cur->_id] = ca;
+            }
+        }
+
+        DimCache cache;
+        if(after._toDrillDown[dim_id] == -1){
+            for(int i = signed(_d[dim_id -1]->_as.size()) - 1; i >= 0; i--){
+                cache.cas[_d[dim_id -1]->_as[i]->_id] = after.cas[_d[dim_id -1]->_as[i]->_id];
+            }
+        }
+        else{
+            for(int i = signed(att_to_index[after._toDrillDown[_d[dim_id -1]->_id]]) - 1; i >= 0; i--){
+                cache.cas[_d[dim_id -1]->_as[i]->_id] = after.cas[_d[dim_id -1]->_as[i]->_id];
+            }
+        }
+        _cache[dim_id][after._toDrillDown[dim_id]] = cache;
+
+    } 
+    
+
+
+    int leftC = 1;
+    vector<int> prefix_product;
+    unordered_map<int, int> dim_index;
+    int prev_dim = -1;
+    for(int i = after._attr_order.size() - 1; i >= 0; i--){
+        Attribute* a =after._attr_order[i];
+        int cur_dim = att_to_dim[a->_id];
+
+        if(prev_dim == -1 || prev_dim != cur_dim){
+            dim_index[cur_dim] = prefix_product.size();
+            prev_dim = cur_dim;
+            prefix_product.push_back(leftC);
+            leftC *= after.countDiv[cur_dim];
+        }
+        after.cas[a->_id].leftCount = prefix_product[dim_index[cur_dim]];
+        after.cs[a->_id].leftCount = prefix_product[dim_index[cur_dim]];
+    }
+
+    after.ccofs.clear();
+
+    for(int i = after._attr_order.size() - 1; i >= 0; i--){
+        for(int j = i - 1; j >= 0; j--){
+            Attribute* a_i = after._attr_order[i];
+            Attribute* a_j = after._attr_order[j];
+            
+            int dim_i = att_to_dim[a_i->_id];
+            int dim_j = att_to_dim[a_j->_id];
+
+            if(dim_i != dim_j){
+                CountCof ccf{};
+                ccf.id1 = a_i->_id;
+                ccf.id2 = a_j->_id;
+                // ccf.leftCount = prefix_product[dim_index[dim_i]];
+                ccf.middleCount = prefix_product[dim_index[dim_j]] / prefix_product[dim_index[dim_i]+1];
+                ccf.cartesian = true;
+                after.ccofs[a_i->_id][a_j->_id] = ccf;
+            }else{
+                CountCof ccf{};
+                ccf.id1 = a_i->_id;
+                ccf.id2 = a_j->_id;
+                // ccf.leftCount = prefix_product[dim_index[dim_i]];
+                ccf.middleCount = 1;
+                ccf.cartesian = false;
+                after.ccofs[a_i->_id][a_j->_id] = ccf;
+            }
+        }
+    }
+
+    return after;
+}
+
+void Ftree::setState(FtreeState fstate){
+    _state = fstate;
+}
 
 RowIter::RowIter(const FtreeState& ts):
     _ts(ts)
