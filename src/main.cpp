@@ -97,7 +97,30 @@ void test_matrix_op(string directory){
     mx3.rightMultiply(mx1);
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
     cout << "time for Matrix to compute left multiplication: " << duration << "\n"; 
+    
 
+    FtreeCofactorIterator cofi(t._state);
+
+    start = clock();
+    while(true){
+        cofi.nextCofactor();
+        if(!cofi.hasNext()){
+            break;
+        }
+    }
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for ftree to compute each cofactor: " << duration << "\n"; 
+
+    start = clock();
+    int bgn = 0;
+    while(bgn < total){
+        vector<vector<double>> slice(mx1->_m.begin() + bgn, mx1->_m.begin() + bgn + cofi._gsize);
+        Matrix* mx4 = new Matrix(slice);
+        mx4->cofactor();
+        bgn += cofi._gsize;
+    }
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for Matrix to compute each cofactor: " << duration << "\n"; 
 
 }
 
@@ -243,6 +266,29 @@ void test_operation_verbose(string directory){
 
 
 
+    cout << "__________________\n";
+    cout << "Cofactor each\n";
+    FtreeCofactorIterator cofi(t._state);
+
+    int start = 0;
+    while(true){
+        Matrix* mx = cofi.nextCofactor();
+        if(!cofi.hasNext()){
+            break;
+        }
+        mx->printSelf();
+        cout << "__________________\n";
+
+        vector<vector<double>> slice(mx1->_m.begin() + start, mx1->_m.begin() + start + cofi._gsize);
+        Matrix* mx4 = new Matrix(slice);
+        mx4->cofactor()->printSelf();
+        cout << "__________________\n";
+        cout << "__________________\n";
+        start += cofi._gsize;
+    }
+    
+
+
 }
 
 // only run this test on dataset in ./data/dimhie/
@@ -377,14 +423,32 @@ int main(int argc, char *argv[])
     test_matrix_op(directory);
     // test_operation_verbose(directory);
     // test_drill_down(directory, 5);
+
     // Ftree t(directory);
-    // vector<Attribute*> att_v;
+    // // vector<Attribute*> att_v;
+
 
     // FtreeState fState = {};
-    // fState._attr_order = att_v;
-    // // fState._attr_order = t._a;
+    // fState._attr_order = t._a;
+    // t.initalize(fState);
 
+    // FtreeToFeatureMatrix fm(fState);
+    // Matrix* mx1 = fm.toMatrix();
+    // mx1->printSelf();
+    
+    // cout << "___________\n";
+    // // // fState._attr_order = t._a;
+    // FtreeCofactorIterator cofi(t._state);
 
+    // while(true){
+    //     Matrix* mx = cofi.nextCofactor();
+    //     if(!cofi.hasNext()){
+    //         break;
+    //     }
+    //     mx->printSelf();
+    //     cout << "______________\n";
+    // }
+    
 
 
     // t.initalize(fState); 

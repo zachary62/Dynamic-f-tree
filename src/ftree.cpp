@@ -749,7 +749,7 @@ Matrix* FtreeToFeatureMatrix::toMatrix()
 
     m.push_back(r);
 
-        while(true){
+    while(true){
         unordered_map<int,int> map = next();
         
         //note check hasNext here, not in the while!
@@ -1099,4 +1099,179 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
 
     Matrix* mx = new Matrix(result);
     return mx;
+}
+
+
+GroupIter::GroupIter(const FtreeState& ts):
+    _ts(ts)
+{
+    for(unsigned int i = 0; i < _ts._attr_order.size() - 1; i++){
+        _iters.push_back(new AttributeRowIter( *_ts._attr_order[i]));
+    }
+    _hasNext = true;
+    _gsize = _ts.cs.at(_ts._attr_order[_ts._attr_order.size() - 1]->_id).value;
+}
+
+unordered_map<int,int> GroupIter::next()
+{
+    unordered_map<int,int> update;
+    for(int i = _iters.size() - 1; i >= 0; i--){
+        // note that here need to use reference not copy!!
+        AttributeRowIter* iter = _iters[i];
+        IterReply r =  iter->next();
+        update[i] = r.value;
+
+        if(i == 0 && r.carry){
+            _hasNext = false;
+        }else if(!r.carry){
+            break;
+        }
+    }
+    return update;
+}
+
+bool GroupIter::hasNext()
+{
+    return _hasNext;
+}
+
+unsigned int GroupIter::groupSize()
+{
+    return _gsize;
+}
+
+GroupIter::~GroupIter()
+{
+    for(unsigned int i = 0; i < _iters.size(); i++){
+        delete _iters[i];
+    }
+}
+
+
+Matrix* FtreeCofactorIterator::nextCofactor(){
+    if(!_init){
+        
+
+        num_feature = 0;
+        
+        for(Attribute * a: _ts._attr_order){
+            for(Feature* f: a->_fs){
+                fid_to_index[f->_id] = num_feature;
+                num_feature ++;
+            }
+        }
+
+        // build a map between attribute -> feature prefix sum
+        for(unsigned int i = 0; i < _ts._attr_order.size(); i++){
+            
+            if(i != _ts._attr_order.size() - 1){
+                vector<double> features = _ts._attr_order[i]->getFeatures(0);
+                for(double feature: features){
+                     _cur_feature.push_back(feature);
+                }
+            }
+            else
+            {
+                // assume last attribute is a dimension itself
+                for(Feature* f: _ts._attr_order[i]->_fs){
+                    double sum = 0;
+                    for(double v: *(f->_value)){
+                        sum += v;
+                    }
+                     _cur_feature.push_back(sum/_gsize);
+                }
+            }
+            
+
+        }
+
+        vector<vector<double>> result(num_feature, vector<double>(num_feature));
+        
+        // treat last dimension separately
+        for(unsigned int i = 0; i < _ts._attr_order.size() ; i++){
+            for(unsigned int j = i; j < _ts._attr_order.size() ; j++){
+                // same attribute
+                if(i == j){
+                    Attribute* a = _ts._attr_order[i];
+                    for(unsigned int m = 0; m < a->_fs.size(); m++){
+                        for(unsigned int n = m; n < a->_fs.size(); n++){
+                            Feature* f1 = a->_fs[m];
+                            Feature* f2 = a->_fs[n];
+                            double cell_result = _cur_feature[fid_to_index.at(f1->_id)] * _cur_feature[fid_to_index.at(f2->_id)] * _gsize;
+                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
+                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                        }
+                    }
+                }
+                else{
+                    Attribute* a = _ts._attr_order[i];
+                    Attribute* b = _ts._attr_order[j];
+
+                    for(Feature* f1: a->_fs){
+                        for(Feature* f2: b->_fs){
+                            double cell_result = _cur_feature[fid_to_index.at(f1->_id)] * _cur_feature[fid_to_index.at(f2->_id)] * _gsize;
+                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
+                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                        }
+                    }
+
+                }
+            }
+        }    
+
+
+        // special case for last attribute features
+
+        for(unsigned int m = 0; m < _ts._attr_order[ _ts._attr_order.size() - 1]->_fs.size(); m++){
+            for(unsigned int n = m; n < _ts._attr_order[ _ts._attr_order.size() - 1]->_fs.size(); n++){
+                Feature* f1 = _ts._attr_order[ _ts._attr_order.size() - 1]->_fs[m];
+                Feature* f2 = _ts._attr_order[ _ts._attr_order.size() - 1]->_fs[n];
+                double sum = 0;
+
+                for(unsigned int p = 0; p <f1->_value->size(); p++){
+                    sum += f1->_value->at(p)*f2->_value->at(p);
+                }
+
+                result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = sum;
+                result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = sum;
+            }
+        }
+    
+
+        _cof = new Matrix(result);
+        _init = true;
+
+    }else{
+        unordered_map<int,int> map = next();
+
+        if(!hasNext()){
+            return _cof;
+        }
+
+        unordered_map<int, int>::iterator it;
+        for ( it = map.begin(); it != map.end(); it++ )
+        {
+            // vector<double> features = _ts._attr_order[it->first]->getFeatures(it->second - 1);
+
+            for(Feature* f: _ts._attr_order[it->first]->_fs){
+                
+                for(int j = 0; j < num_feature; j++){
+                    _cof->_m[fid_to_index.at(f->_id)][j] /= _cur_feature[fid_to_index.at(f->_id)];
+                    _cof->_m[j][fid_to_index.at(f->_id)] /= _cur_feature[fid_to_index.at(f->_id)];
+                }
+
+
+                // cout<< "before: "<<_cur_feature[fid_to_index.at(f->_id)] <<"\n";
+                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(it->second - 1);
+                // cout<< "after: "<<_cur_feature[fid_to_index.at(f->_id)] <<"\n";
+
+                for(int j = 0; j < num_feature; j++){
+                    _cof->_m[fid_to_index.at(f->_id)][j] *= _cur_feature[fid_to_index.at(f->_id)];
+                    _cof->_m[j][fid_to_index.at(f->_id)] *= _cur_feature[fid_to_index.at(f->_id)];
+                }
+
+            }
+        }
+    }
+    return _cof;
 }

@@ -119,3 +119,36 @@ public:
     Matrix* LeftMultiply(Matrix* left);
     const FtreeState& _ts;  
 };
+
+// skip the last attribute
+class GroupIter
+{
+public:
+    GroupIter(const FtreeState& ts);
+    ~GroupIter();
+    std::unordered_map<int,int> next();
+    unsigned int groupSize();
+    bool hasNext();
+    int _gsize;
+    
+private:
+    const FtreeState& _ts;
+    bool _hasNext;
+    std::vector<AttributeRowIter*> _iters;
+};
+
+
+// for XiT Xi
+// The matrix it returns should be read only, since it is updated each time
+class FtreeCofactorIterator: public GroupIter
+{
+public:
+    FtreeCofactorIterator(const FtreeState& ts):GroupIter(ts),_ts(ts),_init(false){};
+    Matrix* nextCofactor();
+    const FtreeState& _ts; 
+    Matrix* _cof;
+    bool _init;
+    int num_feature;
+    std::vector<double> _cur_feature;
+    std::unordered_map<int,int> fid_to_index;
+};
