@@ -775,7 +775,7 @@ Matrix* FtreeToFeatureMatrix::toMatrix()
 
 Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
 {
-    vector<vector<double>> right_vec = right->_m;
+    vector<vector<double>> & right_vec = right->_m;
     vector<vector<double>> result;
     
     // unsigned int b = _t._f.size();
@@ -1016,7 +1016,7 @@ Matrix* FtreeCofactor::Cofactor(){
 }
 
 Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
-    vector<vector<double>> left_vec = left->_m;
+    vector<vector<double>> &left_vec = left->_m;
     int a = left_vec.size();
     int b = left_vec[0].size();
 
@@ -1089,6 +1089,12 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
         }
     }
 
+    //build the prefix_sum
+    for(int i = 0; i < a; i++){
+        for(int j = b - 1 ; j >= 0; j--){
+            left_vec[i][j] = left_vec[i][j] - left_vec[i][j-1];
+        }
+    }
     
     Matrix* mx = new Matrix(result);
     return mx;

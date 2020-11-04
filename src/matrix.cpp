@@ -5,12 +5,12 @@
 
 using namespace std;
 
-Matrix::Matrix(std::vector<std::vector<double>> m) {
+Matrix::Matrix(std::vector<std::vector<double>> &m) {
     _m = m;
 }
 
 Matrix* Matrix::rightMultiply(Matrix* right){
-    vector<vector<double>> right_vec = right->_m;
+    vector<vector<double>> &right_vec = right->_m;
     vector<vector<double>> result;
     unsigned int a = _m.size();
     unsigned int b = _m[0].size();
@@ -26,6 +26,7 @@ Matrix* Matrix::rightMultiply(Matrix* right){
             for(unsigned int k = 0; k < b; k++){
                 sum += _m[i][k] * right_vec[k][j];
             }
+            
             result_row.push_back(sum);
         }
         result.push_back(result_row);
