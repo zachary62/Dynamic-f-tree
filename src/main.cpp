@@ -374,9 +374,9 @@ int main(int argc, char *argv[])
     string directory(argv[1]);
 
     // test_build_ftree(directory);
-    // test_matrix_op(directory);
+    test_matrix_op(directory);
     // test_operation_verbose(directory);
-    test_drill_down(directory, 4);
+    // test_drill_down(directory, 5);
     // Ftree t(directory);
     // vector<Attribute*> att_v;
 
