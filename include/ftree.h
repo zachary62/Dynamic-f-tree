@@ -79,7 +79,7 @@ public:
 
     };
     Matrix* toMatrix();
-
+    
 };
 
 class FtreeToFeatureMatrix: public RowIter
@@ -148,6 +148,33 @@ public:
     const FtreeState& _ts; 
     Matrix* _cof;
     bool _init;
+    int num_feature;
+    std::vector<double> _cur_feature;
+    std::unordered_map<int,int> fid_to_index;
+};
+
+class FtreeRightMultiplicationIterator: public GroupIter
+{
+public:
+    FtreeRightMultiplicationIterator(const FtreeState& ts):GroupIter(ts),_ts(ts),_init(false){};
+    Matrix* RightMultiplyNext(Matrix* right);
+    const FtreeState& _ts;
+    bool _init;
+    double* _res;
+    int num_feature;
+    std::vector<double> _cur_feature;
+    std::unordered_map<int,int> fid_to_index;
+};
+
+
+class FtreeLeftMultiplicationIterator: public GroupIter
+{
+public:
+    FtreeLeftMultiplicationIterator(const FtreeState& ts):GroupIter(ts),_ts(ts),_init(false){};
+    Matrix* LeftMultiplyNext(Matrix* left);
+    const FtreeState& _ts;
+    bool _init;
+    double* _res;
     int num_feature;
     std::vector<double> _cur_feature;
     std::unordered_map<int,int> fid_to_index;

@@ -42,24 +42,14 @@ void test_matrix_op(string directory){
     cout << "time for Matrix to compute cofactor: " << duration << "\n"; 
 
  
-    vector<vector<double> > right_to_mul;
-    
+  
+    double* right_to_mul = new double[t._num_f*10];
     for(int i = 0; i < t._num_f; i++){
-        vector<double> row;
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        row.push_back(1.01);
-        right_to_mul.push_back(row);
+        for(int j = 0; j < 10; j++){
+            right_to_mul[i*10 + j] = 1.01;
+        } 
     }
-
-    Matrix mx2(right_to_mul);
+    Matrix mx2(right_to_mul,t._num_f,10);
 
     start = clock();
     FtreeRightMultiplication frm(t._state);
@@ -77,15 +67,14 @@ void test_matrix_op(string directory){
     Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
     int total = c_first.leftCount * c_first.value;
 
-    vector<vector<double> > left_to_mul;
-    for(int j = 0; j < 10; j++){
-        vector<double> row;
-        for(int i = 0; i < total; i++){
-            row.push_back(1.01);
-        }
-        left_to_mul.push_back(row);
+    double* left_to_mul = new double[total*10];
+    for(int i = 0; i < total; i++){
+        for(int j = 0; j < 10; j++){
+            left_to_mul[i*10 + j] = 1.01;
+        } 
     }
-    Matrix mx3(left_to_mul);
+
+    Matrix mx3(left_to_mul,10,total);
 
     start = clock();
     FtreeLeftMultiplication flm(t._state);
@@ -99,28 +88,28 @@ void test_matrix_op(string directory){
     cout << "time for Matrix to compute left multiplication: " << duration << "\n"; 
     
 
-    FtreeCofactorIterator cofi(t._state);
+    // FtreeCofactorIterator cofi(t._state);
 
-    start = clock();
-    while(true){
-        cofi.nextCofactor();
-        if(!cofi.hasNext()){
-            break;
-        }
-    }
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for ftree to compute each cofactor: " << duration << "\n"; 
+    // start = clock();
+    // while(true){
+    //     cofi.nextCofactor();
+    //     if(!cofi.hasNext()){
+    //         break;
+    //     }
+    // }
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for ftree to compute each cofactor: " << duration << "\n"; 
 
-    start = clock();
-    int bgn = 0;
-    while(bgn < total){
-        vector<vector<double>> slice(mx1->_m.begin() + bgn, mx1->_m.begin() + bgn + cofi._gsize);
-        Matrix* mx4 = new Matrix(slice);
-        mx4->cofactor();
-        bgn += cofi._gsize;
-    }
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for Matrix to compute each cofactor: " << duration << "\n"; 
+    // start = clock();
+    // int bgn = 0;
+    // while(bgn < total){
+    //     vector<vector<double>> slice(mx1->_m.begin() + bgn, mx1->_m.begin() + bgn + cofi._gsize);
+    //     Matrix* mx4 = new Matrix(slice);
+    //     mx4->cofactor();
+    //     bgn += cofi._gsize;
+    // }
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for Matrix to compute each cofactor: " << duration << "\n"; 
 
 }
 
@@ -228,13 +217,11 @@ void test_operation_verbose(string directory){
     cout << "Cofactor from Matrix\n";
     mx1->cofactor()->printSelf();
     cout << "__________________\n";
-    vector<vector<double> > right_to_mul;
+    double* right_to_mul = new double[t._num_f];
     for(int i = 0; i < t._num_f; i++){
-        vector<double> row;
-        row.push_back(1.01);
-        right_to_mul.push_back(row);
+        right_to_mul[i] = 1.01;
     }
-    Matrix mx2(right_to_mul);
+    Matrix mx2(right_to_mul,t._num_f,1);
 
     cout << "Right mul from Ftree\n";
     FtreeRightMultiplication frm(t._state);
@@ -247,13 +234,11 @@ void test_operation_verbose(string directory){
     Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
     int total = c_first.leftCount * c_first.value;
 
-    vector<vector<double> > left_to_mul;
-    vector<double> row;
+    double* left_to_mul = new double[total];
     for(int i = 0; i < total; i++){
-        row.push_back(1.01);
+        left_to_mul[i] = 1.01;
     }
-    left_to_mul.push_back(row);
-    Matrix mx3(left_to_mul);
+    Matrix mx3(left_to_mul,1,total);
 
     cout << "__________________\n";
     cout << "Left mul from Ftree\n";
@@ -270,7 +255,6 @@ void test_operation_verbose(string directory){
     cout << "Cofactor each\n";
     FtreeCofactorIterator cofi(t._state);
 
-    int start = 0;
     while(true){
         Matrix* mx = cofi.nextCofactor();
         if(!cofi.hasNext()){
@@ -279,12 +263,12 @@ void test_operation_verbose(string directory){
         mx->printSelf();
         cout << "__________________\n";
 
-        vector<vector<double>> slice(mx1->_m.begin() + start, mx1->_m.begin() + start + cofi._gsize);
-        Matrix* mx4 = new Matrix(slice);
-        mx4->cofactor()->printSelf();
-        cout << "__________________\n";
-        cout << "__________________\n";
-        start += cofi._gsize;
+        // vector<vector<double>> slice(mx1->_m.begin() + start, mx1->_m.begin() + start + cofi._gsize);
+        // Matrix* mx4 = new Matrix(slice);
+        // mx4->cofactor()->printSelf();
+        // cout << "__________________\n";
+        // cout << "__________________\n";
+        // start += cofi._gsize;
     }
     
 
@@ -424,52 +408,41 @@ int main(int argc, char *argv[])
     // test_operation_verbose(directory);
     // test_drill_down(directory, 5);
 
+
+
+
     // Ftree t(directory);
-    // // vector<Attribute*> att_v;
+
 
 
     // FtreeState fState = {};
     // fState._attr_order = t._a;
     // t.initalize(fState);
 
-    // FtreeToFeatureMatrix fm(fState);
-    // Matrix* mx1 = fm.toMatrix();
-    // mx1->printSelf();
-    
-    // cout << "___________\n";
-    // // // fState._attr_order = t._a;
-    // FtreeCofactorIterator cofi(t._state);
+    // double right[] =  {1,2,3,4,5,6,7,8,9};
+    // Matrix* mx = new Matrix(right,9,1);
+    // FtreeRightMultiplicationIterator lmi(t._state);
 
     // while(true){
-    //     Matrix* mx = cofi.nextCofactor();
-    //     if(!cofi.hasNext()){
+    //     Matrix* rs = lmi.RightMultiplyNext(mx);
+    //     if(!lmi.hasNext()){
     //         break;
     //     }
-    //     mx->printSelf();
+    //     for(int i = 0; i < 2; i++){
+    //         cout<< rs->_m[i] << " ";
+    //     }
+    //     cout <<"\n";
     //     cout << "______________\n";
     // }
     
 
+    // FtreeToFeatureMatrix fm(fState);
+    // Matrix* mx1 = fm.toMatrix();
+    // mx1->printSelf();
+    // cout << "______________\n";
+    // vector<vector<double>> right2 = {{1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2}};
+    // Matrix(right2).rightMultiply(mx1)->printSelf();
 
-    // t.initalize(fState); 
-    // printState(t.attemptDrillDown(1));
-    // t.setState(t.attemptDrillDown(1));
-    // cout << "__________________\n";
-    // // t.setState(t.attemptDrillDown(1));
-    // printState(t.attemptDrillDown(1));
-
-
-    // FtreeState fState2 = {};
-    // vector<Attribute*> att_v2;
-    // att_v2.push_back(t._a[0]);
-    // att_v2.push_back(t._a[1]);
-    // att_v2.push_back(t._a[2]);
-
-    // fState2._attr_order = att_v2;
-    // Ftree t2(directory);
-    // t2.initalize(fState2);
-    // cout << "__________________\n";
-    // printState(t2._state);
 
 
 }

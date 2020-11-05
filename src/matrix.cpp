@@ -5,71 +5,70 @@
 
 using namespace std;
 
-Matrix::Matrix(std::vector<std::vector<double>> &m) {
+Matrix::Matrix(double* m, int num_row, int num_column) {
     _m = m;
+    _num_row = num_row;
+    _num_column = num_column;
 }
 
 Matrix* Matrix::rightMultiply(Matrix* right){
-    vector<vector<double>> &right_vec = right->_m;
-    vector<vector<double>> result;
-    unsigned int a = _m.size();
-    unsigned int b = _m[0].size();
-    if(b != right_vec.size()){
+    double* right_vec = right->_m;
+    int a = _num_row;
+    int b = _num_column;
+
+    if(b != right-> _num_row){
         cout<< "Invalid multiplication!\n";
 		exit(1);
     }
-    unsigned int c = right_vec[0].size();
-    for(unsigned int i = 0; i < a; i++){
-        vector<double> result_row;
-        for(unsigned int j = 0; j < c; j++){
-            double sum = 0;
-            for(unsigned int k = 0; k < b; k++){
-                sum += _m[i][k] * right_vec[k][j];
+    int c = right->  _num_column;
+
+    double* result = new double[a*c];
+
+    for(int i = 0; i < a; i++){
+        for(int j = 0; j < c; j++){
+            for(int k = 0; k < b; k++){
+                result[i*c + j] += _m[i*b +k] * right_vec[k*c + j];
             }
             
-            result_row.push_back(sum);
         }
-        result.push_back(result_row);
     }
+
     // memory!!
-    Matrix* mx = new Matrix(result);
+    Matrix* mx = new Matrix(result,a,c);
     return mx;
 }
 
 Matrix* Matrix::cofactor(){
-    vector<vector<double>> result;
-    unsigned int a = _m.size();
-    unsigned int b = _m[0].size();
+    
+    int a = _num_row;
+    int b = _num_column;
 
-    for(unsigned int i = 0; i < b; i++){
-        vector<double> result_row(b,0);
-        result.push_back(result_row);
-    }
+    double* result = new double[b*b];
 
-    for(unsigned int i = 0; i < b; i++){
-        for(unsigned int j = i; j < b; j++){
+    for(int i = 0; i < b; i++){
+        for(int j = i; j < b; j++){
             double cell_result = 0;
-            for(unsigned int k = 0; k < a; k++){
-                cell_result += _m[k][i] * _m[k][j]; 
+            for(int k = 0; k < a; k++){
+                cell_result += _m[k*b + i] * _m[k*b + j]; 
             }
 
 
             // just calculate half the matrix
-            result[i][j] = cell_result;
-            result[j][i] = cell_result;
+            result[i*b + j] = cell_result;
+            result[j*b + i] = cell_result;
         }
     }
    
-    Matrix* mx = new Matrix(result);
+    Matrix* mx = new Matrix(result, b, b);
     return mx;
 }
 
 
 
 void Matrix::printSelf(){
-    for(vector<double> r: _m){
-        for(double i : r){
-            cout << fixed << setprecision(2) << i <<" ";
+    for(int i = 0; i < _num_row ; i++){
+        for(int j = 0; j <  _num_column; j++){
+            cout << fixed << setprecision(2) << _m[i* _num_column + j] <<" ";
         }
         cout << "\n";
     }

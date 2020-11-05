@@ -4,9 +4,11 @@
 class Matrix
 {
 public:
-    Matrix(std::vector<std::vector<double>> &m);
+    Matrix(double* m, int num_row, int num_column);
     Matrix* rightMultiply(Matrix* right);
     Matrix* cofactor();
-    std::vector<std::vector<double>> _m;
+    double* _m;
+    int _num_row;
+    int _num_column;
     void printSelf();
 };

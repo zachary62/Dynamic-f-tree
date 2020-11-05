@@ -725,7 +725,16 @@ Matrix* FtreeToAttrMatrix::toMatrix()
         m.push_back(r);
     }
 
-    Matrix* mx = new Matrix(m);
+    double* result = new double[m.size()*m[0].size()];
+
+    for(unsigned int i = 0; i < m.size(); i++){
+        for(unsigned int j = 0; j < m[0].size(); j++){
+            result[i*m[0].size() + j] = m[i][j];
+        
+        }
+    }
+
+    Matrix* mx = new Matrix(result, m.size(), m[0].size());
     return mx;
 }
 
@@ -768,15 +777,32 @@ Matrix* FtreeToFeatureMatrix::toMatrix()
         m.push_back(r);
     }
 
-    Matrix* mx = new Matrix(m);
+    double* result = new double[m.size()*m[0].size()];
+
+    for(unsigned int i = 0; i < m.size(); i++){
+        for(unsigned int j = 0; j < m[0].size(); j++){
+            result[i*m[0].size() + j] = m[i][j];
+        
+        }
+    }
+
+    Matrix* mx = new Matrix(result, m.size(), m[0].size());
+
     return mx;
 
 }
 
 Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
 {
-    vector<vector<double>> & right_vec = right->_m;
-    vector<vector<double>> result;
+    Count c_first = _ts.cs.at(_ts._attr_order[0]->_id);
+    
+    int a = c_first.leftCount * c_first.value;
+
+    double* right_vec = right->_m;
+    // int b = right->_num_row;
+    int c = right->_num_column;
+
+    double* result = new double[a*c];
     
     // unsigned int b = _t._f.size();
     // if(b != right_vec.size()){
@@ -787,7 +813,6 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
     // current attribute ids
     vector<double> r;
 
-    vector<double> first_row(right_vec[0].size(),0);
     int k = 0;
 
     // build a map between attribute id -> feature id prefix sum
@@ -801,19 +826,17 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
 
         vector<double> features = _ts._attr_order[i]->getFeatures(0);
         for(double feature: features){
-            for(unsigned int j = 0; j < right_vec[0].size(); j++){
-                first_row[j] += feature * right_vec[k][j];
+            for(int j = 0; j < c; j++){
+                result[j] += feature * right_vec[k*c + j];
             }
             k++;
             r.push_back(feature);
         }
     }
 
-    result.push_back(first_row);
 
-    
-    vector<double> result_row = result[0];
-    
+    k = 1;
+
     // for rows after
     while(true){
 
@@ -824,6 +847,10 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
             break;
         }
 
+        for(int j = 0; j < c; j++){
+            result[k*c + j] = result[k*c - c + j];
+        }
+
         // first is position of change. second is the value changed to.
         unordered_map<int, int>::iterator it;
         for ( it = map.begin(); it != map.end(); it++ )
@@ -832,23 +859,22 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
 
             for(unsigned int i = 0; i < features.size(); i++){
 
-                for(unsigned int j = 0; j < right_vec[0].size(); j++){
-                   result_row[j] -= r[i + prefix_sum_f[it->first]] * right_vec[i + prefix_sum_f[it->first]][j];
+                for(int j = 0; j < c; j++){
+                    result[k*c + j] -= r[i + prefix_sum_f[it->first]] * right_vec[(i + prefix_sum_f[it->first])*c + j];
                 }
 
                 r[i + prefix_sum_f[it->first]] = features[i];
 
-                for(unsigned int j = 0; j < right_vec[0].size(); j++){
-                    result_row[j] += r[i + prefix_sum_f[it->first]] * right_vec[i + prefix_sum_f[it->first]][j];
+                for(int j = 0; j < c; j++){
+                    result[k*c + j] += r[i + prefix_sum_f[it->first]] * right_vec[(i + prefix_sum_f[it->first])*c + j];
                 }
             }
         }
-        result.push_back(result_row);
-
+        k++;
 
     }
 
-    Matrix* mx = new Matrix(result);
+    Matrix* mx = new Matrix(result,a,c);
 
     return mx;
 
@@ -865,11 +891,8 @@ Matrix* FtreeCofactor::Cofactor(){
         }
     }
 
-    vector<vector<double>> result;
-    for(int i = 0; i < num_feature; i++){
-        vector<double> result_row(num_feature,0);
-        result.push_back(result_row);
-    }
+    double* result = new double[num_feature*num_feature];
+
     
     Count c_first = _ts.cs.at(_ts._attr_order[0]->_id);
     double total = c_first.leftCount * c_first.value;
@@ -905,8 +928,8 @@ Matrix* FtreeCofactor::Cofactor(){
                         double rightCount = total/ (c.value *c.leftCount);
                         cell_result *= rightCount;
 
-                        result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
-                        result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                        result[num_feature*(fid_to_index.at(f1->_id) ) + fid_to_index.at(f2->_id)] = cell_result;
+                        result[num_feature*(fid_to_index.at(f2->_id) ) + fid_to_index.at(f1->_id)] = cell_result;
                     }
                 }
 
@@ -962,8 +985,8 @@ Matrix* FtreeCofactor::Cofactor(){
                             double rightCount = total/ (c.value *c.leftCount);
                             cell_result *= rightCount;
 
-                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
-                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                            result[fid_to_index.at(f1->_id)*num_feature + fid_to_index.at(f2->_id)] = cell_result;
+                            result[fid_to_index.at(f2->_id)*num_feature + fid_to_index.at(f1->_id)] = cell_result;
                         
                         }
                         else{
@@ -998,8 +1021,8 @@ Matrix* FtreeCofactor::Cofactor(){
                             double rightCount = total/ (c.value *c.leftCount);
                             cell_result *= rightCount;
 
-                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
-                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                            result[num_feature*(fid_to_index.at(f1->_id) ) + fid_to_index.at(f2->_id)] = cell_result;
+                            result[num_feature*(fid_to_index.at(f2->_id) ) + fid_to_index.at(f1->_id)] = cell_result;
 
                         }
 
@@ -1010,17 +1033,17 @@ Matrix* FtreeCofactor::Cofactor(){
         }
     }
     
-    Matrix* mx = new Matrix(result);
+    Matrix* mx = new Matrix(result,num_feature,num_feature);
     return mx;
 
 }
 
 Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
   
-    vector<vector<double>> &left_vec = left->_m;
-    int a = left_vec.size();
-    int b = left_vec[0].size();
-
+    double* left_vec = left->_m;
+    int a =  left->_num_row;
+    int b =  left->_num_column;
+    
     Count c_first = _ts.cs.at(_ts._attr_order[0]->_id);
     double total = c_first.leftCount * c_first.value;
 
@@ -1039,16 +1062,13 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
         }
     }
     
-    vector<vector<double>> result;
-    for(int i = 0; i < a; i++){
-        vector<double> result_row(num_feature,0);
-        result.push_back(result_row);
-    }
+    double* result = new double[a*num_feature];
+
 
     //build the prefix_sum
     for(int i = 0; i < a; i++){
         for(int j = 1; j < b; j++){
-            left_vec[i][j] = left_vec[i][j-1] + left_vec[i][j];
+            left_vec[i*b + j] = left_vec[i*b + j-1] + left_vec[i*b + j];
         }
     }
 
@@ -1075,9 +1095,9 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
 
                         double rangeSum = 0;
                         if(start == 0){
-                            rangeSum = left_vec[j][length - 1];
+                            rangeSum = left_vec[j*b + length - 1];
                         }else{
-                            rangeSum = left_vec[j][start + length - 1] - left_vec[j][start - 1];
+                            rangeSum = left_vec[j*b + start + length - 1] - left_vec[j*b +start - 1];
                         }
 
                         cell_result += rangeSum * (f->_value->at(p));
@@ -1085,7 +1105,7 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
                         start += length;
                     }
                 }
-                result[j][fid_to_index.at(f->_id)] = cell_result;
+                result[j*num_feature + fid_to_index.at(f->_id)] = cell_result;
             }
         }
     }
@@ -1093,11 +1113,11 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
     //build the prefix_sum
     for(int i = 0; i < a; i++){
         for(int j = b - 1 ; j > 0; j--){
-            left_vec[i][j] = left_vec[i][j] - left_vec[i][j-1];
+            left_vec[i*b + j] = left_vec[i*b + j] - left_vec[i*b + j-1];
         }
     }
 
-    Matrix* mx = new Matrix(result);
+    Matrix* mx = new Matrix(result,a,num_feature);
     return mx;
 }
 
@@ -1181,11 +1201,10 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
                      _cur_feature.push_back(sum/_gsize);
                 }
             }
-            
-
         }
 
-        vector<vector<double>> result(num_feature, vector<double>(num_feature));
+        double* result = new double[num_feature*num_feature];
+        
         
         // treat last dimension separately
         for(unsigned int i = 0; i < _ts._attr_order.size() ; i++){
@@ -1198,8 +1217,8 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
                             Feature* f1 = a->_fs[m];
                             Feature* f2 = a->_fs[n];
                             double cell_result = _cur_feature[fid_to_index.at(f1->_id)] * _cur_feature[fid_to_index.at(f2->_id)] * _gsize;
-                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
-                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                            result[fid_to_index.at(f1->_id)*num_feature + fid_to_index.at(f2->_id)] = cell_result;
+                            result[fid_to_index.at(f2->_id)*num_feature + fid_to_index.at(f1->_id)] = cell_result;
                         }
                     }
                 }
@@ -1210,8 +1229,8 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
                     for(Feature* f1: a->_fs){
                         for(Feature* f2: b->_fs){
                             double cell_result = _cur_feature[fid_to_index.at(f1->_id)] * _cur_feature[fid_to_index.at(f2->_id)] * _gsize;
-                            result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = cell_result;
-                            result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = cell_result;
+                            result[fid_to_index.at(f1->_id)*num_feature + fid_to_index.at(f2->_id)] = cell_result;
+                            result[fid_to_index.at(f2->_id)*num_feature + fid_to_index.at(f1->_id)] = cell_result;
                         }
                     }
 
@@ -1232,13 +1251,13 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
                     sum += f1->_value->at(p)*f2->_value->at(p);
                 }
 
-                result[fid_to_index.at(f1->_id)][fid_to_index.at(f2->_id)] = sum;
-                result[fid_to_index.at(f2->_id)][fid_to_index.at(f1->_id)] = sum;
+                result[fid_to_index.at(f1->_id)*num_feature + fid_to_index.at(f2->_id)] = sum;
+                result[fid_to_index.at(f2->_id)*num_feature + fid_to_index.at(f1->_id)] = sum;
             }
         }
     
 
-        _cof = new Matrix(result);
+        _cof = new Matrix(result,num_feature,num_feature);
         _init = true;
 
     }else{
@@ -1256,8 +1275,8 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
             for(Feature* f: _ts._attr_order[it->first]->_fs){
                 
                 for(int j = 0; j < num_feature; j++){
-                    _cof->_m[fid_to_index.at(f->_id)][j] /= _cur_feature[fid_to_index.at(f->_id)];
-                    _cof->_m[j][fid_to_index.at(f->_id)] /= _cur_feature[fid_to_index.at(f->_id)];
+                    _cof->_m[fid_to_index.at(f->_id)*num_feature + j] /= _cur_feature[fid_to_index.at(f->_id)];
+                    _cof->_m[j*num_feature + fid_to_index.at(f->_id)] /= _cur_feature[fid_to_index.at(f->_id)];
                 }
 
 
@@ -1266,8 +1285,8 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
                 // cout<< "after: "<<_cur_feature[fid_to_index.at(f->_id)] <<"\n";
 
                 for(int j = 0; j < num_feature; j++){
-                    _cof->_m[fid_to_index.at(f->_id)][j] *= _cur_feature[fid_to_index.at(f->_id)];
-                    _cof->_m[j][fid_to_index.at(f->_id)] *= _cur_feature[fid_to_index.at(f->_id)];
+                    _cof->_m[fid_to_index.at(f->_id)*num_feature + j] *= _cur_feature[fid_to_index.at(f->_id)];
+                    _cof->_m[j * num_feature + fid_to_index.at(f->_id)] *= _cur_feature[fid_to_index.at(f->_id)];
                 }
 
             }
@@ -1275,3 +1294,179 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
     }
     return _cof;
 }
+
+Matrix* FtreeLeftMultiplicationIterator::LeftMultiplyNext(Matrix* left){
+    if(!_init){
+
+        num_feature = 0;
+        
+        for(Attribute * a: _ts._attr_order){
+            for(Feature* f: a->_fs){
+                fid_to_index[f->_id] = num_feature;
+                num_feature ++;
+            }
+        }
+        // memory leak
+        _res = new double[num_feature];
+
+        if(left->_num_column!= _gsize){
+            cout << "wrong size for right mulitplication, want " <<num_feature <<", get "<< left->_num_column<<"\n";
+            exit(1);
+        }
+
+        double baseSum = 0;
+        double* leftvec = left->_m;
+        for(int i = 0; i < left->_num_column; i++){
+            baseSum += leftvec[i];
+        }
+
+        for(unsigned int i = 0; i < _ts._attr_order.size() - 1; i++){
+            for(Feature * f : _ts._attr_order[i]->_fs){
+                _cur_feature.push_back(f->_value->at(0));
+                _res[fid_to_index[f->_id]] = f->_value->at(0) * baseSum;
+            }
+        }
+            
+        for(Feature * f : _ts._attr_order[_ts._attr_order.size() - 1]->_fs){
+            double last = 0;
+            for(int i = 0; i < _gsize; i++){
+                last += f->_value->at(i) * leftvec[i];
+            }
+            _res[fid_to_index[f->_id]] = last;
+        }
+        
+        _init = true;
+    }
+    else{
+        unordered_map<int,int> map = next();
+
+        if(!hasNext()){
+            Matrix* mx = new Matrix(_res,1,num_feature);
+            return mx;
+
+        }
+
+        unordered_map<int, int>::iterator it;
+        for ( it = map.begin(); it != map.end(); it++ )
+        {
+            for(Feature* f: _ts._attr_order[it->first]->_fs){
+                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(it->second - 1);
+            }
+        }
+
+        double baseSum = 0;
+        double* leftvec = left->_m;
+        for(int i = 0; i < left->_num_column; i++){
+            baseSum += leftvec[i];
+        }
+
+        for(unsigned int i = 0; i < _ts._attr_order.size() - 1; i++){
+            for(Feature * f : _ts._attr_order[i]->_fs){
+                _res[fid_to_index[f->_id]] = _cur_feature[fid_to_index.at(f->_id)] * baseSum;
+            }
+        }
+            
+        for(Feature * f : _ts._attr_order[_ts._attr_order.size() - 1]->_fs){
+            double last = 0;
+            for(int i = 0; i < _gsize; i++){
+                last += f->_value->at(i) * leftvec[i];
+            }
+            _res[fid_to_index[f->_id]] = last;
+        }
+    }
+
+    Matrix* mx = new Matrix(_res,1,num_feature);
+    return mx;
+
+}
+
+
+
+Matrix* FtreeRightMultiplicationIterator::RightMultiplyNext(Matrix* right){
+    if(!_init){
+
+        num_feature = 0;
+        
+        for(Attribute * a: _ts._attr_order){
+            for(Feature* f: a->_fs){
+                fid_to_index[f->_id] = num_feature;
+                num_feature ++;
+            }
+        }
+        // memory leak
+        _res = new double[_gsize];
+
+        if(right->_num_row != num_feature){
+            cout << "wrong size for right mulitplication, want " <<num_feature <<", get "<< right->_num_row<<"\n";
+            exit(1);
+        }
+
+        for(unsigned int i = 0; i < _ts._attr_order.size() - 1; i++){
+            vector<double> features = _ts._attr_order[i]->getFeatures(0);
+            for(double feature: features){
+                    _cur_feature.push_back(feature);
+            }
+        }
+
+        double base = 0;
+        double* rightvec = right->_m;
+        for(unsigned int i = 0; i < _cur_feature.size(); i++){
+            base += _cur_feature[i] * rightvec[i];
+        }
+
+        for(int i = 0; i < _gsize; i++){
+            double last = 0;
+            for(Feature * f : _ts._attr_order[_ts._attr_order.size() - 1]->_fs){
+                last += f->_value->at(i) * rightvec[fid_to_index[f->_id]];
+            }
+            _res[i] = last + base;
+        }
+
+        _init = true;
+    }
+    else{
+        unordered_map<int,int> map = next();
+
+        if(!hasNext()){
+            Matrix* mx = new Matrix(_res,_gsize,1);
+            return mx;
+        }
+
+        unordered_map<int, int>::iterator it;
+        for ( it = map.begin(); it != map.end(); it++ )
+        {
+            for(Feature* f: _ts._attr_order[it->first]->_fs){
+                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(it->second - 1);
+            }
+        }
+
+        double base = 0;
+        double* rightvec = right->_m;
+        for(unsigned int i = 0; i < _cur_feature.size(); i++){
+            base += _cur_feature[i] * rightvec[i];
+            
+        }
+
+
+        for(int i = 0; i < _gsize; i++){
+            double last = 0;
+            
+            for(Feature * f : _ts._attr_order[_ts._attr_order.size() - 1]->_fs){
+                last += f->_value->at(i) * rightvec[fid_to_index[f->_id]];
+              
+
+            }
+
+            
+            _res[i] = last + base;
+        }
+
+    }
+
+    Matrix* mx = new Matrix(_res,_gsize,1);
+    return mx;
+
+}
+
+
+
