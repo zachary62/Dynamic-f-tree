@@ -30,86 +30,89 @@ void test_matrix_op(string directory){
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
     cout << "time to build Matrix: " << duration << "\n";  
 
-    start = clock();
-    FtreeCofactor fc(t._state);
-    fc.Cofactor();
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for F-tree to compute cofactor: " << duration << "\n"; 
+    // start = clock();
+    // FtreeCofactor fc(t._state);
+    // fc.Cofactor();
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for F-tree to compute cofactor: " << duration << "\n"; 
 
-    start = clock();
-    mx1->cofactor();
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for Matrix to compute cofactor: " << duration << "\n"; 
+    // start = clock();
+    // mx1->cofactor();
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for Matrix to compute cofactor: " << duration << "\n"; 
 
  
   
-    double* right_to_mul = new double[t._num_f*10];
-    for(int i = 0; i < t._num_f; i++){
-        for(int j = 0; j < 10; j++){
-            right_to_mul[i*10 + j] = 1.01;
-        } 
-    }
-    Matrix mx2(right_to_mul,t._num_f,10);
+    // double* right_to_mul = new double[t._num_f*10];
+    // for(int i = 0; i < t._num_f; i++){
+    //     for(int j = 0; j < 10; j++){
+    //         right_to_mul[i*10 + j] = 1.01;
+    //     } 
+    // }
+    // Matrix mx2(right_to_mul,t._num_f,10);
 
-    start = clock();
-    FtreeRightMultiplication frm(t._state);
-    frm.RightMultiply(&mx2);
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for F-tree to compute right multiplication: " << duration << "\n"; 
+    // start = clock();
+    // FtreeRightMultiplication frm(t._state);
+    // frm.RightMultiply(&mx2);
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for F-tree to compute right multiplication: " << duration << "\n"; 
 
-    start = clock();
-    mx1->rightMultiply(&mx2);
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for Matrix to compute right multiplication: " << duration << "\n"; 
+    // start = clock();
+    // mx1->rightMultiply(&mx2);
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for Matrix to compute right multiplication: " << duration << "\n"; 
 
 
 
     Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
     int total = c_first.leftCount * c_first.value;
 
-    double* left_to_mul = new double[total*10];
-    for(int i = 0; i < total; i++){
-        for(int j = 0; j < 10; j++){
-            left_to_mul[i*10 + j] = 1.01;
-        } 
-    }
+    // double* left_to_mul = new double[total*10];
+    // for(int i = 0; i < total; i++){
+    //     for(int j = 0; j < 10; j++){
+    //         left_to_mul[i*10 + j] = 1.01;
+    //     } 
+    // }
 
-    Matrix mx3(left_to_mul,10,total);
+    // Matrix mx3(left_to_mul,10,total);
 
-    start = clock();
-    FtreeLeftMultiplication flm(t._state);
-    flm.LeftMultiply(&mx3);
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for F-tree to compute left multiplication: " << duration << "\n"; 
+    // start = clock();
+    // FtreeLeftMultiplication flm(t._state);
+    // flm.LeftMultiply(&mx3);
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for F-tree to compute left multiplication: " << duration << "\n"; 
 
-    start = clock();
-    mx3.rightMultiply(mx1);
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for Matrix to compute left multiplication: " << duration << "\n"; 
+    // start = clock();
+    // mx3.rightMultiply(mx1);
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for Matrix to compute left multiplication: " << duration << "\n"; 
     
 
-    // FtreeCofactorIterator cofi(t._state);
+    FtreeCofactorIterator cofi(t._state);
 
-    // start = clock();
-    // while(true){
-    //     cofi.nextCofactor();
-    //     if(!cofi.hasNext()){
-    //         break;
-    //     }
-    // }
-    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    // cout << "time for ftree to compute each cofactor: " << duration << "\n"; 
+    start = clock();
+    while(true){
+        cofi.nextCofactor();
+        if(!cofi.hasNext()){
+            break;
+        }
+    }
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for ftree to compute each cofactor: " << duration << "\n"; 
 
-    // start = clock();
-    // int bgn = 0;
-    // while(bgn < total){
-    //     vector<vector<double>> slice(mx1->_m.begin() + bgn, mx1->_m.begin() + bgn + cofi._gsize);
-    //     Matrix* mx4 = new Matrix(slice);
-    //     mx4->cofactor();
-    //     bgn += cofi._gsize;
-    // }
-    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    // cout << "time for Matrix to compute each cofactor: " << duration << "\n"; 
+    start = clock();
+    int bgn = 0;
+    while(bgn < total*t._num_f){
+        double* slice = new double[cofi._gsize*t._num_f];
+        for(int i = 0; i < cofi._gsize*t._num_f; i++){
+            slice[i] = mx1->_m[bgn + i];
+        }
+        Matrix* mx4 = new Matrix(slice, cofi._gsize, t._num_f);
+        mx4->cofactor();
+        bgn += cofi._gsize*t._num_f;
+    }
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for Matrix to compute each cofactor: " << duration << "\n"; 
 
 }
 
