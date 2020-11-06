@@ -1,4 +1,10 @@
-"# Dynamic-f-tree" 
+# Dynamic-f-tree 
 
-schema include data tree and all the operation to perform.
+The lastest verion requires lapack package from mac (for matrix operations), so can only run on mac.
+
+The earlier versions can run on mac/linux/windows with c++11 compiler.
+
+Example dataset:
+make
+./ftree /data/small/
 
