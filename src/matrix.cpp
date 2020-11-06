@@ -63,7 +63,124 @@ Matrix* Matrix::cofactor(){
     return mx;
 }
 
+Matrix * Matrix::shallowCopy(){
+    Matrix* mx = new Matrix(_m, _num_row, _num_column);
+    return mx;
+}
 
+Matrix * Matrix::deepCopy(){
+    double* _m_copy = new double[_num_row*_num_column];
+    for(int i = 0 ; i < _num_row*_num_column; i++){
+        _m_copy[i] = _m[i];
+    }
+    Matrix* mx = new Matrix(_m, _num_row, _num_column);
+    return mx;
+}
+
+void Matrix::add(Matrix* right){
+    if(right->_num_row != _num_row || right->_num_column != _num_column){
+        cout<<"Wrong addition!\n";
+        exit(1);
+    }
+
+    for(int i = 0; i <_num_row; i++){
+        for(int j = 0; j <_num_column; j++){
+            _m[i*_num_column + j] += right->_m[i*_num_column + j];
+        }
+    }
+}
+
+void Matrix::minus(Matrix* right){
+    if(right->_num_row != _num_row || right->_num_column != _num_column){
+        cout<<"Wrong minus!\n";
+        exit(1);
+    }
+
+    for(int i = 0; i <_num_row; i++){
+        for(int j = 0; j <_num_column; j++){
+            _m[i*_num_column + j] -= right->_m[i*_num_column + j];
+        }
+    }
+}
+
+
+void Matrix::minusedby(Matrix* left){
+    if(left->_num_row != _num_row || left->_num_column != _num_column){
+        cout<<"Wrong minus!\n";
+        exit(1);
+    }
+
+    for(int i = 0; i <_num_row; i++){
+        for(int j = 0; j <_num_column; j++){
+            _m[i*_num_column + j] = left->_m[i*_num_column + j] - _m[i*_num_column + j];
+        }
+    }
+}
+
+
+void Matrix::minusScalar(Matrix* right, int start, int end){
+    if(_num_row != end - start  || _num_column != 1){
+        cout<<"Wrong minus scalar!\n";
+        exit(1);
+    }
+
+    for(int i = 0; i < end - start; i++){
+        _m[i] -= right->_m[start + i];
+    }
+}
+
+double Matrix::trace(){
+    if(_num_row  != _num_column){
+        cout<<"Wrong trace!\n";
+        exit(1);
+    }
+
+    double result = 0;
+    for(int i = 0; i <_num_row; i++){
+        result += _m[i*_num_column + i];
+    }
+    return result;
+}
+
+double Matrix::toDouble(){
+    if(_num_row  != 1 || _num_column != 1){
+        cout<<"Wrong to double!\n";
+        exit(1);
+    }
+
+    return _m[0];
+}
+
+void Matrix::divide(double v){
+    for(int i = 0; i <_num_row; i++){
+        for(int j = 0; j <_num_column; j++){
+            _m[i*_num_column + j] /= v;
+        }
+    }
+}
+
+void Matrix::TransposeOne(){
+    if(_num_row != 1 && _num_column != 1){
+        cout<<"wrong transpose one!\n";
+        exit(1);
+    }
+    if(_num_row == 1){
+        _num_row = _num_column;
+        _num_column = 1;
+    }
+    else{
+        _num_column = _num_row;
+        _num_row = 1;
+    }
+    
+}
+
+void Matrix::inverse(){
+    if(_num_row  != _num_column){
+        cout<<"Wrong inversion!\n";
+        exit(1);
+    }
+}
 
 void Matrix::printSelf(){
     for(int i = 0; i < _num_row ; i++){
@@ -72,4 +189,8 @@ void Matrix::printSelf(){
         }
         cout << "\n";
     }
+}
+
+void Matrix::printShape(){
+    cout<<"height: " << _num_row <<" width: " << _num_column <<"\n";
 }

@@ -475,6 +475,140 @@ void test_drill_down(string directory, int atts){
 
 }
 
+void test_Model(string directory){
+    Ftree t(directory);
+
+    FtreeState fState = {};
+    fState._attr_order = t._a;
+    t.initalize(fState);
+
+    Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
+    int height = c_first.leftCount * c_first.value;
+    int width = t._num_f;
+
+    clock_t start;
+    double duration;
+    start = clock();
+
+    double* y = new double[height];
+    for(int i = 0; i < height; i++){
+        y[i] = static_cast <double> (rand()) / static_cast <double> (RAND_MAX);
+    }
+    Matrix* Y = new Matrix(y,height,1);
+
+    double* beta = new double[width];
+    for(int i = 0; i < width; i++){
+        beta[i] = static_cast <double> (rand()) / static_cast <double> (RAND_MAX);
+    }
+    Matrix* Beta = new Matrix(beta,width,1);
+
+    FtreeRightMultiplication frm(t._state);
+    Matrix* Xbeta = frm.RightMultiply(Beta);
+    Y->minus(Xbeta);
+    Matrix* temp1 = Y->shallowCopy();
+    Matrix* itemp1 = Y->shallowCopy();
+    itemp1->TransposeOne();
+    double temp3 = itemp1->rightMultiply(temp1)->toDouble();
+
+    FtreeCofactor fc(t._state);
+    Matrix* temp2 = fc.Cofactor();
+    temp2->inverse();
+
+    double* omega = new double[width*width];
+    for(int i = 0; i < width*width; i++){
+        omega[i] = static_cast <double> (rand()) / static_cast <double> (RAND_MAX);
+    }
+
+    Matrix* Omega = new Matrix(omega,width,width);
+
+    double Sigma = 1;
+    
+
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time to prepare: " << duration << "\n";   
+
+
+    start = clock();
+    double* Aeta = new double[height];
+
+    double* newomega = new double[width*width];
+    for(int i = 0; i < width*width; i++){
+        newomega[i] = 0;
+    }
+    
+    Matrix* newOmega = new Matrix(newomega,width,width);
+
+    double AAeta = 0;
+
+    FtreeCofactorIterator cofi(t._state);
+    FtreeLeftMultiplicationIterator lmi(t._state);
+    FtreeRightMultiplicationIterator rmi(t._state);
+
+    int group = cofi._gsize;
+    int bgn = 0;
+    Omega->inverse();
+    while(bgn < height){
+        double* yi = new double[group];
+        for(int i = 0; i < group; i++){
+            yi[i] = Y->_m[bgn*group + i];
+        }
+        Matrix* Yi = new Matrix(yi,group,1);
+        
+        Yi->minusScalar(Xbeta, bgn, bgn + group);
+        Yi->TransposeOne();
+
+        Matrix* AA = cofi.nextCofactor();
+        Matrix* AA2 = AA->deepCopy();
+        Matrix* gamma = AA->deepCopy();
+        gamma->divide(Sigma*Sigma);
+        gamma->add(Omega);
+        gamma->inverse();
+
+        Matrix* Aiyi = lmi.LeftMultiplyNext(Yi);
+    
+        Aiyi->TransposeOne();
+
+        Matrix* miu = gamma->rightMultiply(Aiyi);
+        miu->divide(Sigma*Sigma);
+        
+        Matrix* Aimiu = rmi.RightMultiplyNext(miu);
+        for(int i = 0; i < group; i++){
+            Aeta[bgn + i] = Aimiu->_m[i];
+        }
+        
+        Matrix* imiu = miu->shallowCopy();
+        
+        imiu->TransposeOne();
+        Matrix* miumiu = miu->rightMultiply(imiu);
+        AA2->rightMultiply(miumiu);
+        AAeta += AA2->trace();
+
+        miumiu->add(gamma);
+        newOmega->add(miumiu);
+        
+        bgn += group;
+    }
+
+    Matrix* Aetam = new Matrix(Aeta, height,1);
+    double v = itemp1->rightMultiply(Aetam)->toDouble();
+
+    Aetam->minusedby(Y);
+    Aetam->TransposeOne();
+
+    FtreeLeftMultiplication flm(t._state);
+    Matrix* XtY_Aeta = flm.LeftMultiply(Aetam);
+    XtY_Aeta->TransposeOne();
+
+    Beta = temp2->rightMultiply(XtY_Aeta);
+
+    newOmega->divide(height);
+    
+    Sigma = (temp3 + AAeta - 2 * v)/height;
+
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for one iteration: " << duration << "\n";   
+}
+
 int main(int argc, char *argv[])
 {
     if(argc <=1 ){
@@ -484,13 +618,40 @@ int main(int argc, char *argv[])
     
     string directory(argv[1]);
 
+    test_Model(directory);
+
+
+
+    // int group = lmi._gsize;
+
+    // double right[] =  {1,2,3,4,5,6,7,8,9};
+    // Matrix* mx = new Matrix(right,9,1);
+
+    // mx->printSelf();
+    // mx->add(mx);
+    // mx->printSelf();
+    // mx->divide(3);
+    // mx->printSelf();
+    // mx->TransposeOne();
+    // mx->printSelf();
+
+    // double right2[] =  {1,2,3,4,5,6,7,8,9};
+    // mx = new Matrix(right2,3,3);
+    // cout<< mx->trace() << "\n";
+
+
+
+
     // test_build_ftree(directory);
-    test_matrix_op(directory);
+    // test_matrix_op(directory);
     // test_operation_verbose(directory);
     // test_drill_down(directory, 5);
 
 
+    // double right[] =  {1,2,3,4,5,6,7,8,9};
+    // Matrix* mx = new Matrix(right,9,1);
 
+    
 
     // Ftree t(directory);
 
