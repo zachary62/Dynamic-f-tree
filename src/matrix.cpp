@@ -2,6 +2,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <Accelerate/Accelerate.h>
 
 using namespace std;
 
@@ -12,6 +13,10 @@ Matrix::Matrix(double* m, int num_row, int num_column) {
 }
 
 Matrix* Matrix::rightMultiply(Matrix* right){
+
+    CBLAS_ORDER layout = CblasRowMajor;
+    CBLAS_TRANSPOSE tp = CblasNoTrans;
+
     double* right_vec = right->_m;
     int a = _num_row;
     int b = _num_column;
@@ -24,14 +29,17 @@ Matrix* Matrix::rightMultiply(Matrix* right){
 
     double* result = new double[a*c];
 
-    for(int i = 0; i < a; i++){
-        for(int j = 0; j < c; j++){
-            for(int k = 0; k < b; k++){
-                result[i*c + j] += _m[i*b +k] * right_vec[k*c + j];
-            }
+    cblas_dgemm(layout,tp, tp, a, c, b, 1, _m, b, right_vec, c, 0, result, c);
+
+
+    // for(int i = 0; i < a; i++){
+    //     for(int j = 0; j < c; j++){
+    //         for(int k = 0; k < b; k++){
+    //             result[i*c + j] += _m[i*b +k] * right_vec[k*c + j];
+    //         }
             
-        }
-    }
+    //     }
+    // }
 
     // memory!!
     Matrix* mx = new Matrix(result,a,c);
@@ -180,6 +188,17 @@ void Matrix::inverse(){
         cout<<"Wrong inversion!\n";
         exit(1);
     }
+
+    int IPIV[_num_row];
+    int INFO=10;
+    int LWORK = _num_row*_num_row;
+
+    double* b = new double[_num_row *_num_row ];
+
+    dgetrf_(&_num_row,&_num_row,_m,&_num_row,IPIV,&INFO);
+    dgetri_(&_num_row,_m,&_num_row,IPIV,b,&LWORK,&INFO);
+
+    delete[] b;
 }
 
 void Matrix::printSelf(){

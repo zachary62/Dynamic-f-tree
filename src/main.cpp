@@ -30,16 +30,16 @@ void test_matrix_op(string directory){
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
     cout << "time to build Matrix: " << duration << "\n";  
 
-    // start = clock();
-    // FtreeCofactor fc(t._state);
-    // fc.Cofactor();
-    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    // cout << "time for F-tree to compute cofactor: " << duration << "\n"; 
+    start = clock();
+    FtreeCofactor fc(t._state);
+    fc.Cofactor();
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for F-tree to compute cofactor: " << duration << "\n"; 
 
-    // start = clock();
-    // mx1->cofactor();
-    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    // cout << "time for Matrix to compute cofactor: " << duration << "\n"; 
+    start = clock();
+    mx1->cofactor();
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time for Matrix to compute cofactor: " << duration << "\n"; 
 
  
   
@@ -64,8 +64,8 @@ void test_matrix_op(string directory){
 
 
 
-    Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
-    int total = c_first.leftCount * c_first.value;
+    // Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
+    // int total = c_first.leftCount * c_first.value;
 
     // double* left_to_mul = new double[total*10];
     // for(int i = 0; i < total; i++){
@@ -115,39 +115,39 @@ void test_matrix_op(string directory){
     // cout << "time for Matrix to compute each cofactor: " << duration << "\n"; 
 
 
-    double* right_to_mul = new double[t._num_f];
-    for(int i = 0; i < t._num_f; i++){
-        right_to_mul[i] = 1.01; 
-    }
+    // double* right_to_mul = new double[t._num_f];
+    // for(int i = 0; i < t._num_f; i++){
+    //     right_to_mul[i] = 1.01; 
+    // }
 
-    start = clock();
-    Matrix* mx = new Matrix(right_to_mul,t._num_f,1);
-    FtreeRightMultiplicationIterator lmi(t._state);
+    // start = clock();
+    // Matrix* mx = new Matrix(right_to_mul,t._num_f,1);
+    // FtreeRightMultiplicationIterator lmi(t._state);
 
-    while(true){
-        lmi.RightMultiplyNext(mx);
-        if(!lmi.hasNext()){
-            break;
-        }
+    // while(true){
+    //     lmi.RightMultiplyNext(mx);
+    //     if(!lmi.hasNext()){
+    //         break;
+    //     }
 
-    }
+    // }
 
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for ftree to compute each right: " << duration << "\n"; 
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for ftree to compute each right: " << duration << "\n"; 
 
-    start = clock();
-    int bgn = 0;
-    while(bgn < total*t._num_f){
-        double* slice = new double[lmi._gsize*t._num_f];
-        for(int i = 0; i < lmi._gsize*t._num_f; i++){
-            slice[i] = mx1->_m[bgn + i];
-        }
-        Matrix* mx4 = new Matrix(slice, lmi._gsize, t._num_f);
-        mx4->rightMultiply(mx);
-        bgn += lmi._gsize*t._num_f;
-    }
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for Matrix to compute each right: " << duration << "\n"; 
+    // start = clock();
+    // int bgn = 0;
+    // while(bgn < total*t._num_f){
+    //     double* slice = new double[lmi._gsize*t._num_f];
+    //     for(int i = 0; i < lmi._gsize*t._num_f; i++){
+    //         slice[i] = mx1->_m[bgn + i];
+    //     }
+    //     Matrix* mx4 = new Matrix(slice, lmi._gsize, t._num_f);
+    //     mx4->rightMultiply(mx);
+    //     bgn += lmi._gsize*t._num_f;
+    // }
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for Matrix to compute each right: " << duration << "\n"; 
 
 
 
@@ -156,39 +156,39 @@ void test_matrix_op(string directory){
 
     
     
-    FtreeLeftMultiplicationIterator llmi(t._state);
+    // FtreeLeftMultiplicationIterator llmi(t._state);
 
-    double* left_to_mul = new double[llmi._gsize];
-    for(int i = 0; i < llmi._gsize; i++){
-        left_to_mul[i] = 1.01; 
-    }
-    Matrix* mx3 = new Matrix(left_to_mul,1, llmi._gsize);
+    // double* left_to_mul = new double[llmi._gsize];
+    // for(int i = 0; i < llmi._gsize; i++){
+    //     left_to_mul[i] = 1.01; 
+    // }
+    // Matrix* mx3 = new Matrix(left_to_mul,1, llmi._gsize);
 
-    start = clock();
-    while(true){
-        llmi.LeftMultiplyNext(mx3);
-        if(!llmi.hasNext()){
-            break;
-        }
+    // start = clock();
+    // while(true){
+    //     llmi.LeftMultiplyNext(mx3);
+    //     if(!llmi.hasNext()){
+    //         break;
+    //     }
 
-    }
+    // }
 
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for ftree to compute each left: " << duration << "\n"; 
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for ftree to compute each left: " << duration << "\n"; 
 
-    start = clock();
-    bgn = 0;
-    while(bgn < total*t._num_f){
-        double* slice = new double[llmi._gsize*t._num_f];
-        for(int i = 0; i < llmi._gsize*t._num_f; i++){
-            slice[i] = mx1->_m[bgn + i];
-        }
-        Matrix* mx4 = new Matrix(slice, llmi._gsize, t._num_f);
-        mx3->rightMultiply(mx4);
-        bgn += llmi._gsize*t._num_f;
-    }
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for Matrix to compute each left: " << duration << "\n"; 
+    // start = clock();
+    // bgn = 0;
+    // while(bgn < total*t._num_f){
+    //     double* slice = new double[llmi._gsize*t._num_f];
+    //     for(int i = 0; i < llmi._gsize*t._num_f; i++){
+    //         slice[i] = mx1->_m[bgn + i];
+    //     }
+    //     Matrix* mx4 = new Matrix(slice, llmi._gsize, t._num_f);
+    //     mx3->rightMultiply(mx4);
+    //     bgn += llmi._gsize*t._num_f;
+    // }
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for Matrix to compute each left: " << duration << "\n"; 
 
 
 
@@ -550,7 +550,7 @@ void test_Model(string directory){
     while(bgn < height){
         double* yi = new double[group];
         for(int i = 0; i < group; i++){
-            yi[i] = Y->_m[bgn*group + i];
+            yi[i] = Y->_m[bgn + i];
         }
         Matrix* Yi = new Matrix(yi,group,1);
         

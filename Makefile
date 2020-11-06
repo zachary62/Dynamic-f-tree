@@ -9,7 +9,7 @@ OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
 CPPFLAGS := -Iinclude -MMD -MP
 CFLAGS   := -g -Wall -std=c++11 -O3 
-LDFLAGS  := -Llib
+LDFLAGS  := /usr/lib/libblas.dylib /usr/lib/liblapack.dylib
 LDLIBS   := -lm
 
 .PHONY: all clean
