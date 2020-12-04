@@ -1,7 +1,7 @@
 theme: jekyll-theme-cayman
 title: [Reptile]
 description: [Complaint driven drill down]
-show_downloads: ["false"]
+show_downloads: false
 exclude:
   - Gemfile
   - Gemfile.lock
