@@ -3,7 +3,7 @@
 
 ## Introduction
 
-Traditional database cleaning and explanation systems reply primarily on the user’s complaint as the quality measure and make strong assumptions about the error types. For systems which generate explanations by perturbing input values through models, they either use very simple models or assume that user can provide magical models. This is a pain point: data scientists may have domain-specific knowledge, but asking them to provide models before using the system is impractical. 
+Traditional database cleaning and explanation systems reply primarily on the user’s complaint as the quality measure and make strong assumptions about the error types. For systems which generate explanations by perturbing input values through models, they either use very simple models or assume that user can magically provide models. This is a pain point: data scientists may have domain-specific knowledge, but asking them to provide models before using the system is impractical. 
 
 Reptile is an innovative explanation system that guides user as they incrementally make complaint drill down into the hierarchies. Reptile leverages domain-specific knowledge and hierarchical structure to repair dataset at aggregation level and recommend next drill down. 
 
