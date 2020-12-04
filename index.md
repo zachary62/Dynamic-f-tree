@@ -1,3 +1,12 @@
+---
+layout: page
+---
+
+<p class="header">
+  <img width="400" src="{{ site.url }}/files/images/arch.pdf" style="margin-left: auto; margin-right: auto;"/>
+</p>
+
+
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/zachary62/Dynamic-f-tree/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
