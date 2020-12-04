@@ -1,9 +1,6 @@
----
-layout: page
----
 
 <p class="header">
-  <img width="400" src="{{ site.url }}/files/images/arch.pdf" style="margin-left: auto; margin-right: auto;"/>
+  <img width="400" src="{{ site.url }}/files/images/back_arch.pdf" style="margin-left: auto; margin-right: auto;"/>
 </p>
 
 
