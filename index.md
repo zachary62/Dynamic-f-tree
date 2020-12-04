@@ -3,7 +3,18 @@
   <img src="https://raw.githubusercontent.com/zachary62/Dynamic-f-tree/gh-pages/files/images/back_arch.png" alt="hi" class="inline" width=700px />
 </center>
 
+## Introduction
 
+Traditional database cleaning and explanation systems reply primarily on the user’s complaint as the quality measure and make strong assumptions about the error types. For systems which generate explanations by perturbing input values through models, they either use very simple models or assume that user can provide magical models. This is a pain point: data scientists may have domain-specific knowledge, but asking them to provide models before using the system is impractical. 
+
+Reptile is an innovative explanation system that guides user as they incrementally make complaint drill down into the hierarchies. Reptile leverages domain-specific knowledge and hierarchical structure to repair dataset at aggregation level and recommend next drill down. 
+
+At the minimum, user only needs to provide the dataset and aggregation functions they want to inspect, and Reptile is all set! Reptile will work like an outlier detector to resolve user's complaints. Reptile allows users to provide small pieces of data as domain-specific knowledge, and Reptile will combine these signals to make more meaningful explanations.
+
+
+
+
+<!---
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/zachary62/Dynamic-f-tree/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
@@ -41,3 +52,4 @@ Your Pages site will use the layout and styles from the Jekyll theme you have se
 ### Support or Contact
 
 Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+---!>
