@@ -5,6 +5,6 @@ show_downloads: false
 exclude:
   - Gemfile
   - Gemfile.lock
-  
+url: "https://zachary62.github.io/Dynamic-f-tree"
 github:
   is_project_page: false
