@@ -1,7 +1,7 @@
 
-<p class="header">
-  <img src="{{ site.url }}/files/images/back_arch.png" alt="hi" class="inline"/>
-</p>
+<center>
+  <img src="https://github.com/zachary62/Dynamic-f-tree/blob/gh-pages/files/images/back_arch.png" alt="hi" class="inline" width=700px />
+</center>
 
 
 ## Welcome to GitHub Pages
