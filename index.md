@@ -1,6 +1,6 @@
 
 <center>
-  <img src=https://raw.githubusercontent.com/zachary62/Dynamic-f-tree/gh-pages/files/images/back_arch.png" alt="hi" class="inline" width=700px />
+  <img src="https://raw.githubusercontent.com/zachary62/Dynamic-f-tree/gh-pages/files/images/back_arch.png" alt="hi" class="inline" width=700px />
 </center>
 
 
