@@ -1,6 +1,6 @@
 
 <p class="header">
-  <img src="{{ site.url }}/files/images/back_arch.pdf" alt="hi" class="inline"/>
+  <img src="{{ site.url }}/files/images/back_arch.png" alt="hi" class="inline"/>
 </p>
 
 
