@@ -14,42 +14,14 @@ At the minimum, user only needs to provide the dataset and aggregation functions
 
 
 
-<!---
-## Welcome to GitHub Pages
 
-You can use the [editor on GitHub](https://github.com/zachary62/Dynamic-f-tree/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+![Image](files/images/back_arch.png)
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
-```markdown
-Syntax highlighted code block
+## Demo
 
-# Header 1
-## Header 2
-### Header 3
+We collobarate with Columbia University Financial Instru-ments Sector Team, who is working on project to design weatherindex insurance for Ethiopia. FIST collects farmer reporteddrought severity (from 1 (low) to 10 (high)) at different villagesin different years in Ethiopia through questionnaires. The questionnaires also record farmers’ reason for each reported drought severity. Ethiopia has a geographical hierarchy: Region, District,Village. Farmer reported data have data cleaning problems which FIST hopes to discover. For example, farmers sometimes confusethe years or the events. Sensing data are available for each villageand district each year. Given the large volume of questionnaires,FIST hopes to prioritize on the questionnaires that are likely toc ontain data cleaning errors. We set up a demo page of Reptilecan to help FIST discover data cleaning problems. Click [here](http://35.232.65.156:5000/com) to see the demo.
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/zachary62/Dynamic-f-tree/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
----!>
+The source codes for model training optimizations is available [here](https://github.com/zachary62/Dynamic-f-tree).
