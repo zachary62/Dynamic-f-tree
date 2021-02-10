@@ -11,8 +11,8 @@ public:
     ~Attribute();
     void printEnd();
     void setEnd(std::vector<int>* end);
-    std::vector<double> getFeatures(int index);
-    
+    std::vector<double>& getFeatures(int index);
+    std::vector<double> result;
     int _id;
     int _num_values;
     std::vector<Feature*> _fs;
@@ -23,7 +23,7 @@ class AttributeRowIter
 {
 public:
     AttributeRowIter(const Attribute& a);
-    IterReply next();
+    void next(bool& carry, int& value);
     
 private:
     const Attribute& _a;

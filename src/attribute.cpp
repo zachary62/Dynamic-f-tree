@@ -33,8 +33,8 @@ void Attribute::printEnd(){
     cout<<"\n";
 }
 
-vector<double> Attribute::getFeatures(int index){
-    vector<double> result;
+vector<double>& Attribute::getFeatures(int index){
+    result.clear();
     for(Feature* f: _fs){
         result.push_back(f->_value->at(index));
     }
@@ -49,13 +49,13 @@ AttributeRowIter::AttributeRowIter(const Attribute& a):
     next_check = 0;
 }
 
-IterReply AttributeRowIter::next()
+void AttributeRowIter::next(bool& carry, int& value)
 {   
-    IterReply r;
-    r.carry = false;
+    
+    carry = false;
 
     if(cur >= _a._endVec->at(next_check)) {
-        r.carry = true;
+        carry = true;
         next_check ++;
     }
 
@@ -66,7 +66,7 @@ IterReply AttributeRowIter::next()
         next_check = 0;
     }
 
-    r.value = cur;
-    return r;
+    value = cur;
+    // return r;
 
 }

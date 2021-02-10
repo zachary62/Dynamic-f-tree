@@ -669,22 +669,23 @@ RowIter::RowIter(const FtreeState& ts):
     _hasNext = true;
 }
 
-unordered_map<int,int> RowIter::next()
+void RowIter::next()
 {
-    unordered_map<int,int> update;
+    update.clear();
     for(int i = _iters.size() - 1; i >= 0; i--){
         // note that here need to use reference not copy!!
         AttributeRowIter* iter = _iters[i];
-        IterReply r =  iter->next();
-        update[i] = r.value;
+        
+        iter->next(carry, value);
+        update.push_back(value);
 
-        if(i == 0 && r.carry){
+        if(i == 0 && carry){
             _hasNext = false;
-        }else if(!r.carry){
+        }else if(!carry){
             break;
         }
     }
-    return update;
+    // return update;
 }
 
 bool RowIter::hasNext()
@@ -711,17 +712,24 @@ Matrix* FtreeToAttrMatrix::toMatrix()
     m.push_back(r);
 
     while(true){
-        unordered_map<int,int> map = next();
         
+        next();
+        // unordered_map<int,int> map 
+
         //note check hasNext here, not in the while!
         if(!hasNext()){
             break;
         }
-        unordered_map<int, int>::iterator it;
-        for ( it = map.begin(); it != map.end(); it++ )
-        {
-            r[it->first] = it->second;
+
+        for(int i = 0; i < update.size(); i++){
+            r[rowSize() - 1 - i] = update[i];
         }
+
+        // unordered_map<int, int>::iterator it;
+        // for ( it = map.begin(); it != map.end(); it++ )
+        // {
+            
+        // }
         m.push_back(r);
     }
 
@@ -750,7 +758,7 @@ Matrix* FtreeToFeatureMatrix::toMatrix()
         prefix_sum_f.push_back(prefix_sum);
         prefix_sum += _ts._attr_order[i]->_fs.size();
 
-        vector<double> features = _ts._attr_order[i]->getFeatures(0);
+        const vector<double> & features = _ts._attr_order[i]->getFeatures(0);
         for(double feature: features){
             r.push_back(feature);
         }
@@ -759,24 +767,34 @@ Matrix* FtreeToFeatureMatrix::toMatrix()
     m.push_back(r);
 
     while(true){
-        unordered_map<int,int> map = next();
+        // unordered_map<int,int> map = 
+        next();
         
         //note check hasNext here, not in the while!
         if(!hasNext()){
             break;
         }
 
-        unordered_map<int, int>::iterator it;
-        for ( it = map.begin(); it != map.end(); it++ )
-        {
-            vector<double> features = _ts._attr_order[it->first]->getFeatures(it->second - 1);
-            for(unsigned int i = 0; i < features.size(); i++){
-                r[i + prefix_sum_f[it->first]] = features[i];
+        for(int i = 0; i < update.size(); i++){
+            // r[rowSize() - 1 - i] = update[i];
+            const vector<double> & features = _ts._attr_order[rowSize() - 1 - i]->getFeatures(update[i] - 1);
+            for(unsigned int j = 0; j < features.size(); j++){
+                r[j + prefix_sum_f[rowSize() - 1 - i]] = features[j];
             }
         }
+
+        // unordered_map<int, int>::iterator it;
+        // for ( it = map.begin(); it != map.end(); it++ )
+        // {
+        //     vector<double> features = _ts._attr_order[it->first]->getFeatures(it->second - 1);
+        //     for(unsigned int i = 0; i < features.size(); i++){
+        //         r[i + prefix_sum_f[it->first]] = features[i];
+        //     }
+        // }
         m.push_back(r);
     }
 
+       
     double* result = new double[m.size()*m[0].size()];
 
     for(unsigned int i = 0; i < m.size(); i++){
@@ -840,7 +858,8 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
     // for rows after
     while(true){
 
-        unordered_map<int,int> map = next();
+        // unordered_map<int,int> map = 
+        next();
 
         //note check hasNext here, not in the while!
         if(!hasNext()){
@@ -852,24 +871,42 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
         }
 
         // first is position of change. second is the value changed to.
-        unordered_map<int, int>::iterator it;
-        for ( it = map.begin(); it != map.end(); it++ )
-        {
-            vector<double> features = _ts._attr_order[it->first]->getFeatures(it->second - 1);
+        // unordered_map<int, int>::iterator it;
 
+        // for ( it = map.begin(); it != map.end(); it++ )
+        // {
+        //     vector<double> features = _ts._attr_order[it->first]->getFeatures(it->second - 1);
+
+        //     for(unsigned int i = 0; i < features.size(); i++){
+
+        //         for(int j = 0; j < c; j++){
+        //             result[k*c + j] -= r[i + prefix_sum_f[it->first]] * right_vec[(i + prefix_sum_f[it->first])*c + j];
+        //         }
+
+        //         r[i + prefix_sum_f[it->first]] = features[i];
+
+        //         for(int j = 0; j < c; j++){
+        //             result[k*c + j] += r[i + prefix_sum_f[it->first]] * right_vec[(i + prefix_sum_f[it->first])*c + j];
+        //         }
+        //     }
+        // }
+        for(int att = 0; att< update.size(); att++){
+            // cout<<att <<"\n";
+            const vector<double> & features = _ts._attr_order[rowSize() - 1 - att]->getFeatures(update[att] - 1);
             for(unsigned int i = 0; i < features.size(); i++){
-
                 for(int j = 0; j < c; j++){
-                    result[k*c + j] -= r[i + prefix_sum_f[it->first]] * right_vec[(i + prefix_sum_f[it->first])*c + j];
+                    result[k*c + j] -= r[i + prefix_sum_f[rowSize() - 1 - att]] * right_vec[(i + prefix_sum_f[rowSize() - 1 - att])*c + j];
+                    result[k*c + j] += r[i + prefix_sum_f[rowSize() - 1 - att]] * features[i];
                 }
 
-                r[i + prefix_sum_f[it->first]] = features[i];
-
-                for(int j = 0; j < c; j++){
-                    result[k*c + j] += r[i + prefix_sum_f[it->first]] * right_vec[(i + prefix_sum_f[it->first])*c + j];
-                }
+                r[i + prefix_sum_f[rowSize() - 1 - att]] = features[i];
+                // for(int j = 0; j < c; j++){
+                //     result[k*c + j] += r[i + prefix_sum_f[rowSize() - 1 - att]] * right_vec[(i + prefix_sum_f[rowSize() - 1 - att])*c + j];
+                // }
             }
         }
+
+
         k++;
 
     }
@@ -1110,12 +1147,12 @@ Matrix* FtreeLeftMultiplication::LeftMultiply(Matrix* left){
         }
     }
 
-    //build the prefix_sum
-    for(int i = 0; i < a; i++){
-        for(int j = b - 1 ; j > 0; j--){
-            left_vec[i*b + j] = left_vec[i*b + j] - left_vec[i*b + j-1];
-        }
-    }
+    // //build the prefix_sum
+    // for(int i = 0; i < a; i++){
+    //     for(int j = b - 1 ; j > 0; j--){
+    //         left_vec[i*b + j] = left_vec[i*b + j] - left_vec[i*b + j-1];
+    //     }
+    // }
 
     Matrix* mx = new Matrix(result,a,num_feature);
     return mx;
@@ -1138,12 +1175,12 @@ unordered_map<int,int> GroupIter::next()
     for(int i = _iters.size() - 1; i >= 0; i--){
         // note that here need to use reference not copy!!
         AttributeRowIter* iter = _iters[i];
-        IterReply r =  iter->next();
-        update[i] = r.value;
+        iter->next(carry, value);
+        update[i] = value;
 
-        if(i == 0 && r.carry){
+        if(i == 0 && carry){
             _hasNext = false;
-        }else if(!r.carry){
+        }else if(!carry){
             break;
         }
     }
@@ -1310,7 +1347,7 @@ Matrix* FtreeLeftMultiplicationIterator::LeftMultiplyNext(Matrix* left){
         _res = new double[num_feature];
 
         if(left->_num_column!= _gsize){
-            cout << "wrong size for right mulitplication, want " <<num_feature <<", get "<< left->_num_column<<"\n";
+            cout << "wrong size for left mulitplication, want " <<num_feature <<", get "<< left->_num_column<<"\n";
             exit(1);
         }
 

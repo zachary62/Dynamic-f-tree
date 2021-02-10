@@ -62,14 +62,17 @@ class RowIter
 public:
     RowIter(const FtreeState& ts);
     ~RowIter();
-    std::unordered_map<int,int> next();
+    void next();
     unsigned int rowSize();
     bool hasNext();
+    std::vector<int> update;
     
 private:
     const FtreeState& _ts;
     bool _hasNext;
     std::vector<AttributeRowIter*> _iters;
+    int value;
+    bool carry;
 };
 
 class FtreeToAttrMatrix: public RowIter
@@ -135,6 +138,8 @@ private:
     const FtreeState& _ts;
     bool _hasNext;
     std::vector<AttributeRowIter*> _iters;
+    int value;
+    bool carry;
 };
 
 

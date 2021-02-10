@@ -36,18 +36,24 @@ void test_matrix_op(string directory){
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
     cout << "time for F-tree to compute cofactor: " << duration << "\n"; 
 
-    start = clock();
-    mx1->cofactor();
-    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
-    cout << "time for Matrix to compute cofactor: " << duration << "\n"; 
+    // start = clock();
+    // mx1->cofactor();
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for Matrix to compute cofactor: " << duration << "\n"; 
   
-    double* right_to_mul = new double[t._num_f*10];
+    // double* right_to_mul = new double[t._num_f*10];
+    // for(int i = 0; i < t._num_f; i++){
+    //     for(int j = 0; j < 10; j++){
+    //         right_to_mul[i*10 + j] = 1.01;
+    //     } 
+    // }
+    // Matrix mx2(right_to_mul,t._num_f,10);
+
+    double* right_to_mul = new double[t._num_f];
     for(int i = 0; i < t._num_f; i++){
-        for(int j = 0; j < 10; j++){
-            right_to_mul[i*10 + j] = 1.01;
-        } 
+        right_to_mul[i] = 1.01;
     }
-    Matrix mx2(right_to_mul,t._num_f,10);
+    Matrix mx2(right_to_mul,t._num_f,1);
 
     start = clock();
     FtreeRightMultiplication frm(t._state);
@@ -63,17 +69,25 @@ void test_matrix_op(string directory){
     Count c_first = t._state.cs.at(t._state._attr_order[0]->_id);
     int total = c_first.leftCount * c_first.value;
 
-    double* left_to_mul = new double[total*10];
+    // double* left_to_mul = new double[total*10];
+    // for(int i = 0; i < total; i++){
+    //     for(int j = 0; j < 10; j++){
+    //         left_to_mul[i*10 + j] = 1.01;
+    //     } 
+    // }
+
+    // Matrix mx3(left_to_mul,10,total);
+
+    double* left_to_mul = new double[total];
     for(int i = 0; i < total; i++){
-        for(int j = 0; j < 10; j++){
-            left_to_mul[i*10 + j] = 1.01;
-        } 
+            left_to_mul[i] = 1.01;
     }
 
-    Matrix mx3(left_to_mul,10,total);
+    Matrix mx3(left_to_mul,1,total);
 
-    start = clock();
+    
     FtreeLeftMultiplication flm(t._state);
+    start = clock();
     flm.LeftMultiply(&mx3);
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
     cout << "time for F-tree to compute left multiplication: " << duration << "\n"; 
@@ -347,6 +361,7 @@ void test_drill_down(string directory, int atts){
     clock_t start;
     double duration;
 
+
     start = clock();
     Ftree t(directory);
     duration = (clock() - start) / (double)CLOCKS_PER_SEC;
@@ -471,6 +486,8 @@ void test_Model(string directory){
     int height = c_first.leftCount * c_first.value;
     int width = t._num_f;
 
+    cout<< "height: " << height << "\n";
+    cout<< "width: " << width << "\n";
     clock_t start;
     double duration;
     start = clock();
@@ -487,13 +504,7 @@ void test_Model(string directory){
     }
     Matrix* Beta = new Matrix(beta,width,1);
 
-    FtreeRightMultiplication frm(t._state);
-    Matrix* Xbeta = frm.RightMultiply(Beta);
-    Y->minus(Xbeta);
-    Matrix* temp1 = Y->shallowCopy();
-    Matrix* itemp1 = Y->shallowCopy();
-    itemp1->TransposeOne();
-    double temp3 = itemp1->rightMultiply(temp1)->toDouble();
+
 
     FtreeCofactor fc(t._state);
     Matrix* temp2 = fc.Cofactor();
@@ -514,6 +525,15 @@ void test_Model(string directory){
 
 
     start = clock();
+
+    FtreeRightMultiplication frm(t._state);
+    Matrix* Xbeta = frm.RightMultiply(Beta);
+    Y->minus(Xbeta);
+    Matrix* temp1 = Y->shallowCopy();
+    Matrix* itemp1 = Y->shallowCopy();
+    itemp1->TransposeOne();
+    double temp3 = itemp1->rightMultiply(temp1)->toDouble();
+    
     double* Aeta = new double[height];
 
     double* newomega = new double[width*width];
@@ -604,11 +624,12 @@ int main(int argc, char *argv[])
     string directory(argv[1]);
 
     
+
     // test_build_ftree(directory);
     test_matrix_op(directory);
     // test_operation_verbose(directory);
-    // test_drill_down(directory, 5);
-    test_Model(directory);
+    // test_drill_down(directory, 3);
+    // test_Model(directory);
 }
 
 
