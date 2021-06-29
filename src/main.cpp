@@ -826,7 +826,7 @@ int main(int argc, char *argv[])
         test_operation_verbose(directory);
     }
     else if(operation == "matrix"){
-        test_matrix_op(directory);
+        test_matrix_op(directory); 
     }
     else if(operation == "drilldown"){
         // test_drill_down(directory, 3);
