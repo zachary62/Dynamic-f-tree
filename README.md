@@ -28,6 +28,6 @@ For performance test, you need to run the following command:
 
 ```
 
-The Explanation Accuracy is tested with python 3.7.8 because run time is not concerned for this experiment. Please check the python program in the synthetic folder.
+The Explanation Accuracy is implemented in python 3.7.8 because run time is not concerned for this experiment. Please check the python program in the synthetic folder.
 
 
