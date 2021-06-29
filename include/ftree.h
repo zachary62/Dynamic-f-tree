@@ -129,10 +129,13 @@ class GroupIter
 public:
     GroupIter(const FtreeState& ts);
     ~GroupIter();
-    std::unordered_map<int,int> next();
+    void next();
     unsigned int groupSize();
+    unsigned int rowSize();
     bool hasNext();
     int _gsize;
+    std::vector<int> update;
+    Matrix* mx;
     
 private:
     const FtreeState& _ts;

@@ -834,6 +834,7 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
     int k = 0;
 
     // build a map between attribute id -> feature id prefix sum
+    // (first x features belong to y attribute)
     vector<int> prefix_sum_f;
     int prefix_sum = 0;
 
@@ -891,12 +892,16 @@ Matrix* FtreeRightMultiplication::RightMultiply(Matrix* right)
         //     }
         // }
         for(int att = 0; att< update.size(); att++){
-            // cout<<att <<"\n";
+            // update returns the change of attribute
+            // now get the change of features
             const vector<double> & features = _ts._attr_order[rowSize() - 1 - att]->getFeatures(update[att] - 1);
             for(unsigned int i = 0; i < features.size(); i++){
                 for(int j = 0; j < c; j++){
-                    result[k*c + j] -= r[i + prefix_sum_f[rowSize() - 1 - att]] * right_vec[(i + prefix_sum_f[rowSize() - 1 - att])*c + j];
-                    result[k*c + j] += r[i + prefix_sum_f[rowSize() - 1 - att]] * features[i];
+                    result[k*c + j] -= r[i + prefix_sum_f[rowSize() - 1 - att]] * right_vec[(i + prefix_sum_f[rowSize() - 1 - att])*c + j];                    
+                    // cout<<"after delete: "<< result[k*c + j]<<"\n";
+                    result[k*c + j] +=  features[i] * right_vec[(i + prefix_sum_f[rowSize() - 1 - att])*c + j];;
+                    // cout<<"after add: "<< result[k*c + j]<<"\n";
+                    
                 }
 
                 r[i + prefix_sum_f[rowSize() - 1 - att]] = features[i];
@@ -1167,16 +1172,17 @@ GroupIter::GroupIter(const FtreeState& ts):
     }
     _hasNext = true;
     _gsize = _ts.cs.at(_ts._attr_order[_ts._attr_order.size() - 1]->_id).value;
+    mx = new Matrix();
 }
 
-unordered_map<int,int> GroupIter::next()
+void GroupIter::next()
 {
-    unordered_map<int,int> update;
+    update.clear();
     for(int i = _iters.size() - 1; i >= 0; i--){
         // note that here need to use reference not copy!!
         AttributeRowIter* iter = _iters[i];
         iter->next(carry, value);
-        update[i] = value;
+        update.push_back(value);
 
         if(i == 0 && carry){
             _hasNext = false;
@@ -1184,7 +1190,6 @@ unordered_map<int,int> GroupIter::next()
             break;
         }
     }
-    return update;
 }
 
 bool GroupIter::hasNext()
@@ -1196,6 +1201,12 @@ unsigned int GroupIter::groupSize()
 {
     return _gsize;
 }
+
+unsigned int GroupIter::rowSize()
+{
+    return _iters.size();
+}
+
 
 GroupIter::~GroupIter()
 {
@@ -1222,7 +1233,7 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
         for(unsigned int i = 0; i < _ts._attr_order.size(); i++){
             
             if(i != _ts._attr_order.size() - 1){
-                vector<double> features = _ts._attr_order[i]->getFeatures(0);
+                const vector<double> & features = _ts._attr_order[i]->getFeatures(0);
                 for(double feature: features){
                      _cur_feature.push_back(feature);
                 }
@@ -1298,18 +1309,18 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
         _init = true;
 
     }else{
-        unordered_map<int,int> map = next();
+        next();
 
         if(!hasNext()){
             return _cof;
         }
 
-        unordered_map<int, int>::iterator it;
-        for ( it = map.begin(); it != map.end(); it++ )
+        
+        for (int att = 0; att< update.size(); att++)
         {
             // vector<double> features = _ts._attr_order[it->first]->getFeatures(it->second - 1);
 
-            for(Feature* f: _ts._attr_order[it->first]->_fs){
+            for(Feature* f: _ts._attr_order[rowSize() - 1 - att]->_fs){
                 
                 for(int j = 0; j < num_feature; j++){
                     _cof->_m[fid_to_index.at(f->_id)*num_feature + j] /= _cur_feature[fid_to_index.at(f->_id)];
@@ -1318,7 +1329,7 @@ Matrix* FtreeCofactorIterator::nextCofactor(){
 
 
                 // cout<< "before: "<<_cur_feature[fid_to_index.at(f->_id)] <<"\n";
-                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(it->second - 1);
+                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(update[att] - 1);
                 // cout<< "after: "<<_cur_feature[fid_to_index.at(f->_id)] <<"\n";
 
                 for(int j = 0; j < num_feature; j++){
@@ -1375,19 +1386,19 @@ Matrix* FtreeLeftMultiplicationIterator::LeftMultiplyNext(Matrix* left){
         _init = true;
     }
     else{
-        unordered_map<int,int> map = next();
+        next();
 
         if(!hasNext()){
-            Matrix* mx = new Matrix(_res,1,num_feature);
+            mx ->update(_res,1,num_feature);
             return mx;
 
         }
 
-        unordered_map<int, int>::iterator it;
-        for ( it = map.begin(); it != map.end(); it++ )
+        
+        for (int att = 0; att< update.size(); att++)
         {
-            for(Feature* f: _ts._attr_order[it->first]->_fs){
-                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(it->second - 1);
+            for(Feature* f: _ts._attr_order[rowSize() - 1 - att]->_fs){
+                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(update[att] - 1);
             }
         }
 
@@ -1412,7 +1423,7 @@ Matrix* FtreeLeftMultiplicationIterator::LeftMultiplyNext(Matrix* left){
         }
     }
 
-    Matrix* mx = new Matrix(_res,1,num_feature);
+    mx ->update(_res,1,num_feature);
     return mx;
 
 }
@@ -1462,18 +1473,19 @@ Matrix* FtreeRightMultiplicationIterator::RightMultiplyNext(Matrix* right){
         _init = true;
     }
     else{
-        unordered_map<int,int> map = next();
+        next();
 
         if(!hasNext()){
-            Matrix* mx = new Matrix(_res,_gsize,1);
+            mx ->update(_res,_gsize,1);
+            // Matrix* mx = new Matrix(_res,_gsize,1);
             return mx;
         }
 
-        unordered_map<int, int>::iterator it;
-        for ( it = map.begin(); it != map.end(); it++ )
+        
+        for (int att = 0; att< update.size(); att++)
         {
-            for(Feature* f: _ts._attr_order[it->first]->_fs){
-                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(it->second - 1);
+            for(Feature* f: _ts._attr_order[rowSize() - 1 - att]->_fs){
+                _cur_feature[fid_to_index.at(f->_id)] = f->_value->at(update[att] - 1);
             }
         }
 
@@ -1500,7 +1512,7 @@ Matrix* FtreeRightMultiplicationIterator::RightMultiplyNext(Matrix* right){
 
     }
 
-    Matrix* mx = new Matrix(_res,_gsize,1);
+    mx ->update(_res,_gsize,1);
     return mx;
 
 }

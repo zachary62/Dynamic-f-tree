@@ -327,6 +327,11 @@ void test_operation_verbose(string directory){
     flm.LeftMultiply(&mx3)->printSelf();
     cout << "__________________\n";
     cout << "Left mul from Matrix\n";
+
+    for(int i = 0; i < total; i++){
+        left_to_mul[i] = 1.01;
+    }
+
     mx3.rightMultiply(mx1)->printSelf();
 
 
@@ -475,6 +480,181 @@ void test_drill_down(string directory, int atts){
 
 }
 
+
+void test_drill_down2(string directory, int atts){
+    
+    clock_t start;
+    double duration;
+
+
+    start = clock();
+    Ftree t(directory);
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time to read files: " << duration << "\n";   
+
+    start = clock();
+    FtreeState fState = {};
+    vector<Attribute*> att_vec;
+
+    att_vec.push_back(t._a[0]);
+    att_vec.push_back(t._a[1]);
+    att_vec.push_back(t._a[2]);
+    for(int k = 0 ; k < atts; k++){
+        att_vec.push_back(t._a[7 + k]);
+    }
+    fState._attr_order = att_vec;
+   
+    t.initalize(fState); 
+    duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    cout << "time to intialize: " << duration << "\n"; 
+
+    for(int i = 0; i < 3; i++){
+                start = clock();
+        t.attemptDrillDown(1, true);
+        duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+        cout << "time for " << i <<" drill down A with cache: " << duration << "\n"; 
+
+        start = clock();
+        t.attemptDrillDown(2, true);
+        duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+        cout << "time for " << i <<" drill down B with cache: " << duration << "\n"; 
+
+        start = clock();
+        t.attemptDrillDown(1, false);
+        duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+        cout << "time for " << i <<" drill down A without cache: " << duration << "\n"; 
+
+        start = clock();
+        t.attemptDrillDown(2, false);
+        duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+        cout << "time for " << i <<" drill down B without cache: " << duration << "\n"; 
+
+        // real drill down
+        t.setState(t.attemptDrillDown(1, true));
+    }
+
+    for(int i = 0; i < 3; i++){
+        
+
+        start = clock();
+        fState = {};
+        att_vec.clear();
+        for(int j = 0; j < 3 + i; j++){
+            att_vec.push_back(t._a[j]);
+        }
+        
+        for(int k = 0 ; k < atts + 1; k++){
+            att_vec.push_back(t._a[7 + k]);
+        }
+        fState._attr_order = att_vec;
+    
+        t.initalize(fState); 
+        duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+        cout << "time for " << i << " drill down B static: " << duration << "\n"; 
+
+        start = clock();
+        fState = {};
+        att_vec.clear();
+        for(int j = 0; j < 3 + i + 1; j++){
+            att_vec.push_back(t._a[j]);
+        }
+        
+        for(int k = 0 ; k < atts; k++){
+            att_vec.push_back(t._a[7 + k]);
+        }
+        fState._attr_order = att_vec;
+    
+        t.initalize(fState); 
+        duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+        cout << "time for " << i << " drill down A static: " << duration << "\n"; 
+    }
+    
+    
+    // start = clock();
+    // for(int i = 0; i < t._num_d; i++){
+    //     t.attemptDrillDown(i+1, true);
+    // }
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for second drill down with cache: " << duration << "\n"; 
+
+    // t.initalize(fState); 
+
+    // start = clock();
+    // for(int i = 1; i < t._num_d; i++){
+    //     t.attemptDrillDown(i+1, false);
+    // }
+    // t.setState(t.attemptDrillDown(1, false));
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for first drill down without cache: " << duration << "\n"; 
+
+    // start = clock();
+    // for(int i = 0; i < t._num_d; i++){
+    //     t.attemptDrillDown(i+1, false);
+    // }
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for second drill down without cache: " << duration << "\n"; 
+
+
+    // start = clock();
+    // for(int i = 0; i < t._num_d; i++){
+    //     FtreeState fState2 = {};
+    //     vector<Attribute*> att_v;
+    //     for(int j = 0; j < t._num_d; j++){
+    //         for(int k = 0; k < atts; k++){
+    //             att_v.push_back(t._a[7*j + k]);
+    //         }
+
+    //         if(i == j){
+    //             att_v.push_back(t._a[7*j + atts]);
+    //         }
+    //     }   
+    //     fState2._attr_order = att_v;
+    //     t.initalize(fState2); 
+    // }
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for first drill down without propogate: " << duration << "\n"; 
+
+    // start = clock();
+    // for(int i = 1; i < t._num_d; i++){
+    //     FtreeState fState2 = {};
+    //     vector<Attribute*> att_v;
+    //     for(int k = 0; k < atts + 1; k++){
+    //         att_v.push_back(t._a[k]);
+    //     }
+
+    //     for(int j = 1; j < t._num_d; j++){
+    //         for(int k = 0; k < atts; k++){
+    //             att_v.push_back(t._a[7*j + k]);
+    //         }
+    //         if(i == j){
+    //             att_v.push_back(t._a[7*j + atts]);
+    //         }
+    //     }   
+        
+    //     fState2._attr_order = att_v;
+    //     t.initalize(fState2); 
+    // }
+
+    // FtreeState fState3 = {};
+    // vector<Attribute*> att_v2;
+    // for(int k = 0; k < atts + 2; k++){
+    //     att_v2.push_back(t._a[k]);
+    // }
+
+    // for(int i = 1; i < t._num_d; i++){
+    //     for(int k = 0; k < atts; k++){
+    //         att_v2.push_back(t._a[7*i + k]);
+    //     }
+    // }   
+
+    // fState3._attr_order = att_v2;
+    // t.initalize(fState3); 
+
+    // duration = (clock() - start) / (double)CLOCKS_PER_SEC;
+    // cout << "time for second drill down without propogate: " << duration << "\n"; 
+
+}
+
 void test_Model(string directory){
     Ftree t(directory);
 
@@ -545,6 +725,8 @@ void test_Model(string directory){
 
     double AAeta = 0;
 
+ 
+    
     FtreeCofactorIterator cofi(t._state);
     FtreeLeftMultiplicationIterator lmi(t._state);
     FtreeRightMultiplicationIterator rmi(t._state);
@@ -552,19 +734,33 @@ void test_Model(string directory){
     int group = cofi._gsize;
     int bgn = 0;
     Omega->inverse();
-    while(bgn < height){
-        double* yi = new double[group];
+    double* yi = new double[group];
+    Matrix* Yi = new Matrix(yi,group,1);
+
+    double* aa2 = new double[width * width];
+    Matrix* AA2 = new Matrix(aa2,width,width);
+
+    double* gma = new double[width * width];
+    Matrix* gamma = new Matrix(gma,width,width);
+
+   
+
+    // while(bgn < 1){
+    while(bgn < height){    
+        
         for(int i = 0; i < group; i++){
             yi[i] = Y->_m[bgn + i];
         }
-        Matrix* Yi = new Matrix(yi,group,1);
         
+        Yi->_num_row = group;
+        Yi->_num_column = 1;
         Yi->minusScalar(Xbeta, bgn, bgn + group);
         Yi->TransposeOne();
 
         Matrix* AA = cofi.nextCofactor();
-        Matrix* AA2 = AA->deepCopy();
-        Matrix* gamma = AA->deepCopy();
+
+        AA2->deepCopy(AA);
+        gamma->deepCopy(AA);
         gamma->divide(Sigma*Sigma);
         gamma->add(Omega);
         gamma->inverse();
@@ -575,12 +771,10 @@ void test_Model(string directory){
 
         Matrix* miu = gamma->rightMultiply(Aiyi);
         miu->divide(Sigma*Sigma);
-        
         Matrix* Aimiu = rmi.RightMultiplyNext(miu);
         for(int i = 0; i < group; i++){
             Aeta[bgn + i] = Aimiu->_m[i];
         }
-        
         Matrix* imiu = miu->shallowCopy();
         
         imiu->TransposeOne();
@@ -593,6 +787,8 @@ void test_Model(string directory){
         
         bgn += group;
     }
+    
+  
 
     Matrix* Aetam = new Matrix(Aeta, height,1);
     double v = itemp1->rightMultiply(Aetam)->toDouble();
@@ -616,20 +812,32 @@ void test_Model(string directory){
 
 int main(int argc, char *argv[])
 {
-    if(argc <=1 ){
-        cout << "Please specify data directory!\n"; 
+    if(argc <=2){
+        cout << "Please specify operation and data directory!\n"; 
         exit(1);
     }
-    
-    string directory(argv[1]);
+    string operation(argv[1]);
+    string directory(argv[2]);
 
-    
-
-    // test_build_ftree(directory);
-    test_matrix_op(directory);
-    // test_operation_verbose(directory);
-    // test_drill_down(directory, 3);
-    // test_Model(directory);
+    if(operation == "build"){
+        test_build_ftree(directory);
+    }
+    else if(operation == "visualize"){
+        test_operation_verbose(directory);
+    }
+    else if(operation == "matrix"){
+        test_matrix_op(directory);
+    }
+    else if(operation == "drilldown"){
+        // test_drill_down(directory, 3);
+        test_drill_down2(directory, 5);
+    }
+    else if(operation == "train"){
+        test_Model(directory);
+    }
+    else{
+        cout<<"invalid operation\n";
+    }
 }
 
 

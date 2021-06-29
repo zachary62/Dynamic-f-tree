@@ -12,6 +12,17 @@ Matrix::Matrix(double* m, int num_row, int num_column) {
     _num_column = num_column;
 }
 
+Matrix::Matrix() {
+
+}
+
+void Matrix::update(double* m, int num_row, int num_column) {
+    _m = m;
+    _num_row = num_row;
+    _num_column = num_column;
+}
+
+
 Matrix* Matrix::rightMultiply(Matrix* right){
 
     CBLAS_ORDER layout = CblasRowMajor;
@@ -83,6 +94,13 @@ Matrix * Matrix::deepCopy(){
     }
     Matrix* mx = new Matrix(_m, _num_row, _num_column);
     return mx;
+}
+
+void Matrix::deepCopy(Matrix* target){
+    double* _m_copy = target->_m;
+    for(int i = 0 ; i < _num_row*_num_column; i++){
+        _m[i] = _m_copy[i];
+    }
 }
 
 void Matrix::add(Matrix* right){

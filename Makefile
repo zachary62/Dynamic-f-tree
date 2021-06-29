@@ -3,7 +3,7 @@ OBJ_DIR := obj
 BIN_DIR := .
 CC := g++
 
-EXE := $(BIN_DIR)/ftree
+EXE := $(BIN_DIR)/reptile
 SRC := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ := $(SRC:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
