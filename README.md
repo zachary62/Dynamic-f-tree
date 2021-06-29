@@ -1,6 +1,6 @@
 # Reptile: Aggregation-level Explanations for Hierarchical Data
 
-Reptile is an explanation system for hierarchical data. Given an anomalous aggregate query result,Reptile recommends the next drill-down attribute, and ranks the drill-down groups based on the extent repairing the group’s statistics to itsexpected values resolves the anomaly. Reptile efficiently trains amulti-level model that leverages the data’s hierarchy to estimatethe expected values, and uses a factorised representation of the feature matrix to remove redundancies due to the data’s hierarchical structure. We further extend model training to support factorised data, and develop a suite of optimizations that leverage the data’s hi-erarchical structure.
+Reptile is an explanation system for hierarchical data. Given an anomalous aggregate query result,Reptile recommends the next drill-down attribute, and ranks the drill-down groups based on the extent repairing the group’s statistics to itsexpected values resolves the anomaly. Reptile efficiently trains amulti-level model that leverages the data’s hierarchy to estimate the expected values, and uses a factorised representation of the feature matrix to remove redundancies due to the data’s hierarchical structure. We further extend model training to support factorised data, and develop a suite of optimizations that leverage the data’s hierarchical structure.
 
 ## Running Reptile
 
